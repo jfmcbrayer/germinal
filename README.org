@@ -1,0 +1,16 @@
+* Germinal, a Gemini Protocol server
+
+Germinal is a server for the [[gopher://zaibatsu.circumlunar.space/1/~solderpunk/gemini][Gemini Protocol]], written in Common Lisp.
+
+It is named after the early 20th century Yiddish anarchist newspaper [[https://en.wikipedia.org/wiki/Germinal_(journal)][Germinal]]. 
+
+** Installation
+
+TODO
+
+** Usage
+
+TODO
+
+
+
