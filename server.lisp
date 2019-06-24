@@ -3,14 +3,27 @@
 (defpackage :germinal
   (:use :cl)
   (:import-from :cl+ssl
-                :make-context
-                :with-global-context
-                :make-ssl-server-stream
+                #:make-context
+                #:with-global-context
+                #:make-ssl-server-stream
    )
-  (:export :start
-           :stop))
+  (:import-from :usocket
+                #:socket-listen
+                #:socket-accept
+                #:socket-close
+                #:socket-server)
+  (:export #:start)
+  )
 
 (in-package :germinal)
 
-(defun start (&rest args &key host (port 1965))
-  t)
+;; Initially define an echo server so I can learn to do this.
+(defun echo-handler (stream)
+  (loop
+    (when (listen stream)
+      (let ((line (read-line stream nil)))
+        (write-line line stream)
+        (force-output stream)))))
+
+(defun start (&key (host "127.0.0.1") (port 1965))
+  (usocket:socket-server host port #'echo-handler))

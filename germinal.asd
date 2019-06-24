@@ -10,6 +10,8 @@
   :depends-on (
                :babel
                :usocket
+               :usocket-server
+               :bordeaux-threads
                :cl+ssl
                )
   :components (
