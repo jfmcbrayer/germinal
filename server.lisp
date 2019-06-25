@@ -35,7 +35,7 @@
                                                :key "key.pem")))
 
 (defun start (&key (host "127.0.0.1") (port 1965))
-  (usocket:socket-server host port #'tls-echo-handler ))
+  (usocket:socket-server host port #'tls-echo-handler () :multi-threading t))
 
 (defun read-line-crlf (stream &optional eof-error-p)
   (let ((s (make-string-output-stream)))
