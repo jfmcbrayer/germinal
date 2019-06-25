@@ -19,11 +19,14 @@
 
 ;; Initially define an echo server so I can learn to do this.
 (defun echo-handler (stream)
-  (loop
-    (when (listen stream)
-      (let ((line (read-line stream nil)))
-        (write-line line stream)
-        (force-output stream)))))
+  (handler-case
+      (loop
+        (when (listen stream)
+          (let ((line (read-line stream nil)))
+            (write-line line stream)
+            (force-output stream))))
+    (error ()
+      (close stream))))
 
 (defun tls-echo-handler (stream)
   (echo-handler (cl+ssl:make-ssl-server-stream stream
@@ -31,19 +34,8 @@
                                                :certificate "cert.pem"
                                                :key "key.pem")))
 
-(defun tls-echo-handler-2 (stream)
-  (let ((tls-stream (cl+ssl:make-ssl-server-stream stream
-                                                   :external-format '(:utf-8 :eol-style :lf)
-                                                   :certificate "cert.pem"
-                                                   :key "key.pem")))
-    (loop
-      (when (listen tls-stream)
-        (let ((line (read-line stream nil)))
-          (write-line line stream)
-          (force-output stream))))))
-
 (defun start (&key (host "127.0.0.1") (port 1965))
-  (usocket:socket-server host port #'tls-echo-handler-2 ))
+  (usocket:socket-server host port #'tls-echo-handler ))
 
 (defun read-line-crlf (stream &optional eof-error-p)
   (let ((s (make-string-output-stream)))
