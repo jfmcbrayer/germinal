@@ -13,6 +13,7 @@
                :usocket-server
                :bordeaux-threads
                :cl+ssl
+               :str
                )
   :components (
                (:file "server")

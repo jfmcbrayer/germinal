@@ -12,6 +12,13 @@
                 #:socket-accept
                 #:socket-close
                 #:socket-server)
+  (:import-from :str
+                #:split
+                #:join
+                #:concat)
+  (:import-from :babel
+                #:octets-to-string
+                #:string-to-octets)
   (:export #:start)
   )
 
@@ -35,7 +42,9 @@
                                                :key "key.pem")))
 
 (defun start (&key (host "127.0.0.1") (port 1965))
-  (usocket:socket-server host port #'tls-echo-handler () :multi-threading t))
+  (usocket:socket-server host port #'trivial-gemini-handler ()
+                         :multi-threading t
+                         :element-type '(unsigned-byte 8)))
 
 (defun read-line-crlf (stream &optional eof-error-p)
   (let ((s (make-string-output-stream)))
@@ -49,3 +58,22 @@
       finally
          (return
            (if empty nil (get-output-stream-string s))))))
+
+(defun trivial-gemini-handler (stream)
+  (let* ((tls-stream (cl+ssl:make-ssl-server-stream stream
+                                                    :external-format '(:utf-8)
+                                                    :certificate "cert.pem"
+                                                    :key "key.pem"))
+         (request (read-line-crlf tls-stream))
+         (response (get-response-for-gemini-url request)))
+    (write-sequence (str:concat (nth 1 response) '(#\return #\newline))
+                    tls-stream)
+    (write-sequence (nth 2 response) tls-stream)
+    (force-output tls-stream)))
+
+(defun get-response-for-gemini-url (request)
+  (let ((status "2	text/gemini; charset=utf-8")
+        (body (str:concat "This is a gemini response for " request)))
+    (list status body)))
+
+
