@@ -30,7 +30,7 @@
 
 (defun tls-echo-handler (stream)
   (echo-handler (cl+ssl:make-ssl-server-stream stream
-                                               :external-format '(:utf-8 :eol-style :lf)
+                                               :external-format '(:utf-8)
                                                :certificate "cert.pem"
                                                :key "key.pem")))
 
