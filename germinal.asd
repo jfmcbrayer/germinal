@@ -14,6 +14,7 @@
                :bordeaux-threads
                :cl+ssl
                :str
+               :trivial-mimes
                )
   :components (
                (:file "server")

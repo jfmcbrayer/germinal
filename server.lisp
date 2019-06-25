@@ -15,10 +15,14 @@
   (:import-from :str
                 #:split
                 #:join
-                #:concat)
+                #:concat
+                #:starts-with-p)
   (:import-from :babel
                 #:octets-to-string
                 #:string-to-octets)
+  (:import-from :mimes
+                #:*mime-db*
+                #:mime)
   (:export #:start)
   )
 
@@ -42,7 +46,7 @@
                                                :key "key.pem")))
 
 (defun start (&key (host "127.0.0.1") (port 1965))
-  (usocket:socket-server host port #'trivial-gemini-handler ()
+  (usocket:socket-server host port #'gemini-handler ()
                          :multi-threading t
                          :element-type '(unsigned-byte 8)))
 
@@ -59,21 +63,31 @@
          (return
            (if empty nil (get-output-stream-string s))))))
 
-(defun trivial-gemini-handler (stream)
+(defun gemini-handler (stream)
   (let* ((tls-stream (cl+ssl:make-ssl-server-stream stream
                                                     :external-format '(:utf-8)
                                                     :certificate "cert.pem"
                                                     :key "key.pem"))
          (request (read-line-crlf tls-stream))
-         (response (get-response-for-gemini-url request)))
-    (write-sequence (str:concat (nth 1 response) '(#\return #\newline))
+         (response (gemini-serve-file request)))
+    (write-sequence (str:concat (nth 0 response) '(#\return #\newline))
                     tls-stream)
-    (write-sequence (nth 2 response) tls-stream)
+    (force-output tls-stream)
+    (write-sequence (nth 1 response) tls-stream)
     (force-output tls-stream)))
 
-(defun get-response-for-gemini-url (request)
+(defun get-trivial-response-for-gemini-url (request)
   (let ((status "2	text/gemini; charset=utf-8")
         (body (str:concat "This is a gemini response for " request)))
     (list status body)))
 
+(defun gemini-serve-file (request)
+  (let* ((path (if (str:starts-with-p "/" request) (str:s-rest request) request))
+         (path (str:replace-all "../" "" path)))
+    (if (probe-file path)
+        (let* ((mime-type (mimes:mime path))
+               (status (str:concat "2	" mime-type))
+               (body (alexandria:read-file-into-string path)))
+          (list status body))
+        (list (str:concat "4	Path not found " path) ""))))
 
