@@ -50,10 +50,11 @@
            (if empty nil (get-output-stream-string s))))))
 
 (defun gemini-handler (stream)
-  (let* ((tls-stream (cl+ssl:make-ssl-server-stream stream
-                                                    :external-format '(:utf-8)
-                                                    :certificate "cert.pem"
-                                                    :key "key.pem"))
+  (let* ((tls-stream
+           (cl+ssl:make-ssl-server-stream stream
+                                          :external-format '(:utf-8)
+                                          :certificate "cert.pem"
+                                          :key "key.pem"))
          (request (read-line-crlf tls-stream))
          (response (gemini-serve-file-or-directory request)))
     (write-sequence (str:concat (nth 0 response) '(#\return #\newline))
