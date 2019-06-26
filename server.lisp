@@ -69,33 +69,22 @@
         (if (probe-file path)
             (progn
               (if (not (member :other-read (osicat:file-permissions path)))
-                  (list "4	Not found" "")
+                  (list "2	text/plain" "Permission denied")
                   (let* ((mime-type (mimes:mime path))
                          (status (str:concat "2	" mime-type))
                          (body (alexandria:read-file-into-string path)))
                     (list status body))))
-            (list "4	Not found" ""))
+              (list "4	Not found" ""))
       (stream-error () ; can't read because it's a directory
-        (gemini-serve-directory path)))))
+        (gemini-serve-directory request)))))
 
 (defun gemini-serve-directory (request)
-  (if (probe-file (str:concat request "index.gmi"))
-      (gemini-serve-file (str:concat request "index.gmi"))
-      (let* ((request (if (not (str:ends-with-p "/" request))
-                          (str:concat request "/")
-                          request))
-             (status "2	text/gemini")
-             (files (map 'list #'file-namestring
-                         (uiop:directory-files request)))
-             (directories (map 'list
-                               (lambda (s)
-                                 (car (last (str:split-omit-nulls
-                                             "/" (directory-namestring s)))))
-                               (uiop:subdirectories request)))
-             (body (str:join (string #\Newline)
-                             (list "# Subdirectories"
-                                   (str:join (string #\Newline) directories)
-                                   (string #\Newline)
-                                   "# Files"
-                                   (str:join (string #\Newline) files)))))
-        (list status body))))
+  (let* ((path (if (str:starts-with-p "/" request) (str:s-rest request) request))
+         (path (str:replace-all "../" "" path))
+         (path (str:concat *germinal-root* "/" path)))
+   (if (probe-file (str:concat path "index.gmi"))
+     (gemini-serve-file (str:concat request "/index.gmi"))
+     (gemini-generate-directory-list path))))
+
+(defun gemini-generate-directory-list (path)
+  (list "5	Not implemented" "Directory list: not implemented"))
