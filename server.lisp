@@ -28,6 +28,8 @@
 
 (in-package :germinal)
 
+(defvar *germinal-root* "/var/gopher")
+
 ;; Initially define an echo server so I can learn to do this.
 (defun echo-handler (stream)
   (handler-case
@@ -46,6 +48,9 @@
                                                :key "key.pem")))
 
 (defun start (&key (host "127.0.0.1") (port 1965))
+  ;; update mime types
+  (setf (gethash "org" mimes:*mime-db*) "text/org-mode")
+  (setf (gethash "gmi" mimes:*mime-db*) "text/gemini")
   (usocket:socket-server host port #'gemini-handler ()
                          :multi-threading t
                          :element-type '(unsigned-byte 8)))
@@ -83,11 +88,38 @@
 
 (defun gemini-serve-file (request)
   (let* ((path (if (str:starts-with-p "/" request) (str:s-rest request) request))
-         (path (str:replace-all "../" "" path)))
-    (if (probe-file path)
-        (let* ((mime-type (mimes:mime path))
-               (status (str:concat "2	" mime-type))
-               (body (alexandria:read-file-into-string path)))
-          (list status body))
-        (list (str:concat "4	Path not found " path) ""))))
+         (path (str:replace-all "../" "" path))
+         (path (str:concat *germinal-root* "/" path)))
+    (handler-case
+        (if (probe-file path)
+            (let* ((mime-type (mimes:mime path))
+                   (status (str:concat "2	" mime-type))
+                   (body (alexandria:read-file-into-string path)))
+              (list status body))
+            (list (str:concat "4	Path not found " path) ""))
+      (stream-error ()
+        (gemini-serve-directory path)))))
 
+(defun gemini-serve-directory (request)
+  (let* ((request (if (not (str:ends-with-p "/" request))
+                           (str:concat request "/")
+                      request))
+         (status "2	text/gemini")
+         (files (map 'list #'file-namestring
+                     (uiop:directory-files request)))
+         (directories (map 'list
+                           (lambda (s)
+                             (car (last (str:split-omit-nulls
+                                         "/" (directory-namestring s)))))
+                           (uiop:subdirectories request)))
+         (body (str:join (string #\Newline)
+                         (list "# Subdirectories"
+                               (str:join (string #\Newline) directories)
+                               (string #\Newline)
+                               "# Files"
+                               (str:join (string #\Newline) files)))))
+    (list status body)))
+
+;; TODO
+;; gemini-serve-directory
+;; gemini-serve-directory-or-file
