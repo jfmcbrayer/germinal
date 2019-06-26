@@ -27,8 +27,10 @@
 (interpol:enable-interpol-syntax)
 
 (defvar *germinal-root* "/var/gemini")
+(defvar *germinal-host* "0.0.0.0")
+(defvar *germinal-port* 1965)
 
-(defun start (&key (host "127.0.0.1") (port 1965))
+(defun start (&key (host *germinal-host*) (port *germinal-port*))
   ;; update mime types
   (setf (gethash "org" mimes:*mime-db*) "text/org-mode")
   (setf (gethash "gmi" mimes:*mime-db*) "text/gemini")
@@ -64,30 +66,59 @@
     (force-output tls-stream)))
 
 
-(defun gemini-serve-file-or-directory (request-path)
-  (let* ((path (if (str:starts-with-p "/" request-path)
-                   (str:s-rest request-path)
-                   request-path))
+(defun gemini-serve-file-or-directory (request)
+  (let* ((path (if (str:starts-with-p "/" request)
+                   (str:s-rest request)
+                   request))
          (path (str:replace-all "../" "" path))
          (path (str:concat *germinal-root* "/" path))
          (path-kind (osicat:file-kind path :follow-symlinks t)))
-    (cond
-      ((eq :directory path-kind) (gemini-serve-directory path) )
-      ((eq :regular-file path-kind) (gemini-serve-file path))
-      (t (list "4	Not Found" "")))))
+    (if (not (member :other-read (osicat:file-permissions path)))
+        (list "4	Not Found" "")
+        (cond
+          ((eq :directory path-kind) (gemini-serve-directory path request))
+          ((eq :regular-file path-kind) (gemini-serve-file path request))
+          (t (list "4	Not Found" ""))))))
 
-(defun gemini-serve-file (path)
-  (if (not (member :other-read (osicat:file-permissions path)))
-      (list "2	text/plain" "Permission denied")
-      (let* ((mime-type (mimes:mime path))
-             (status (str:concat "2	" mime-type))
-             (body (alexandria:read-file-into-string path)))
-        (list status body))))
+(defun gemini-serve-file (path request)
+  (list "2	text/plain" "Permission denied")
+  (let* ((mime-type (mimes:mime path))
+         (status (str:concat "2	" mime-type))
+         (body (alexandria:read-file-into-string path)))
+    (list status body)))
 
-(defun gemini-serve-directory (path)
+(defun gemini-serve-directory (path request)
    (if (probe-file (str:concat path "index.gmi"))
-     (gemini-serve-file (str:concat path "/index.gmi"))
-     (gemini-generate-directory-list path)))
+     (gemini-serve-file (str:concat path "/index.gmi") request)
+     (gemini-generate-directory-list path request)))
 
-(defun gemini-generate-directory-list (path)
-  (list "5	Not implemented" "Directory list: not implemented"))
+(defun gemini-generate-directory-list (path request)
+  (let* ((subdirectories (map 'list #'linkify
+                              (uiop:subdirectories (str:concat path "/"))))
+         (files (map 'list #'linkify
+                     (uiop:directory-files (str:concat path "/"))))
+         (status "2	text/gemini")
+         (body (make-string-output-stream)))
+    (write-sequence #?"# Directory listing for ${(de-prefix path)}\n\n"
+                    body)
+    (write-sequence #?"## Subdirectories\n" body)
+    (write-sequence
+     (let ((cl-interpol:*list-delimiter* #\Newline))
+       #?"@{subdirectories}\n\n")
+     body)
+    (write-sequence #?"## Files\n" body)
+    (write-sequence
+     (let ((cl-interpol:*list-delimiter* #\Newline))
+       #?"@{files}\n\n")
+     body)
+    (list status (get-output-stream-string body))))
+
+(defun linkify (path &optional text)
+  (let ((path-name (de-prefix(namestring path))))
+    (if text
+        #?"[$(text)|$(path-name)]"
+        #?"[$(path-name)|$(path-name)]"
+        )))
+
+(defun de-prefix (path &optional (prefix *germinal-root*))
+  (str:replace-all prefix "" path))
