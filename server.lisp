@@ -33,23 +33,6 @@
 
 (defvar *germinal-root* "/var/gemini")
 
-;; Initially define an echo server so I can learn to do this.
-(defun echo-handler (stream)
-  (handler-case
-      (loop
-        (when (listen stream)
-          (let ((line (read-line stream nil)))
-            (write-line line stream)
-            (force-output stream))))
-    (error ()
-      (close stream))))
-
-(defun tls-echo-handler (stream)
-  (echo-handler (cl+ssl:make-ssl-server-stream stream
-                                               :external-format '(:utf-8)
-                                               :certificate "cert.pem"
-                                               :key "key.pem")))
-
 (defun start (&key (host "127.0.0.1") (port 1965))
   ;; update mime types
   (setf (gethash "org" mimes:*mime-db*) "text/org-mode")
@@ -83,11 +66,6 @@
     (force-output tls-stream)
     (write-sequence (nth 1 response) tls-stream)
     (force-output tls-stream)))
-
-(defun get-trivial-response-for-gemini-url (request)
-  (let ((status "2	text/gemini; charset=utf-8")
-        (body (str:concat "This is a gemini response for " request)))
-    (list status body)))
 
 (defun gemini-serve-file (request)
   (let* ((path (if (str:starts-with-p "/" request) (str:s-rest request) request))
@@ -125,7 +103,3 @@
                                "# Files"
                                (str:join (string #\Newline) files)))))
     (list status body)))
-
-;; TODO
-;; gemini-serve-directory
-;; gemini-serve-directory-or-file
