@@ -16,6 +16,7 @@
                :str
                :trivial-mimes
                :osicat
+               :cl-interpol
                )
   :components (
                (:file "server")

@@ -24,6 +24,7 @@
   )
 
 (in-package :germinal)
+(interpol:enable-interpol-syntax)
 
 (defvar *germinal-root* "/var/gemini")
 
