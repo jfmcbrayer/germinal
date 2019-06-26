@@ -16,19 +16,22 @@
                 #:split
                 #:join
                 #:concat
-                #:starts-with-p)
+                #:starts-with-p
+                #:ends-with-p)
   (:import-from :babel
                 #:octets-to-string
                 #:string-to-octets)
   (:import-from :mimes
                 #:*mime-db*
                 #:mime)
+  (:import-from :osicat
+                #:file-permissions)
   (:export #:start)
   )
 
 (in-package :germinal)
 
-(defvar *germinal-root* "/var/gopher")
+(defvar *germinal-root* "/var/gemini")
 
 ;; Initially define an echo server so I can learn to do this.
 (defun echo-handler (stream)
@@ -92,12 +95,15 @@
          (path (str:concat *germinal-root* "/" path)))
     (handler-case
         (if (probe-file path)
-            (let* ((mime-type (mimes:mime path))
-                   (status (str:concat "2	" mime-type))
-                   (body (alexandria:read-file-into-string path)))
-              (list status body))
+            (progn
+              (if (not (member :other-read (osicat:file-permissions path)))
+                  (list "4	Not found" "")
+                  (let* ((mime-type (mimes:mime path))
+                         (status (str:concat "2	" mime-type))
+                         (body (alexandria:read-file-into-string path)))
+                    (list status body))))
             (list (str:concat "4	Path not found " path) ""))
-      (stream-error ()
+      (stream-error () ; can't read because it's a directory
         (gemini-serve-directory path)))))
 
 (defun gemini-serve-directory (request)

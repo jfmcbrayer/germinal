@@ -15,6 +15,7 @@
                :cl+ssl
                :str
                :trivial-mimes
+               :osicat
                )
   :components (
                (:file "server")
