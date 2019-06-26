@@ -75,15 +75,12 @@
       (t (list "4	Not Found" "")))))
 
 (defun gemini-serve-file (path)
-  (if (probe-file path)
-      (progn
-        (if (not (member :other-read (osicat:file-permissions path)))
-            (list "2	text/plain" "Permission denied")
-            (let* ((mime-type (mimes:mime path))
-                   (status (str:concat "2	" mime-type))
-                   (body (alexandria:read-file-into-string path)))
-              (list status body))))
-      (list "4	Not found" "")))
+  (if (not (member :other-read (osicat:file-permissions path)))
+      (list "2	text/plain" "Permission denied")
+      (let* ((mime-type (mimes:mime path))
+             (status (str:concat "2	" mime-type))
+             (body (alexandria:read-file-into-string path)))
+        (list status body))))
 
 (defun gemini-serve-directory (path)
    (if (probe-file (str:concat path "index.gmi"))
