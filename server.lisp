@@ -54,37 +54,41 @@
                                                     :certificate "cert.pem"
                                                     :key "key.pem"))
          (request (read-line-crlf tls-stream))
-         (response (gemini-serve-file request)))
+         (response (gemini-serve-file-or-directory request)))
     (write-sequence (str:concat (nth 0 response) '(#\return #\newline))
                     tls-stream)
     (force-output tls-stream)
     (write-sequence (nth 1 response) tls-stream)
     (force-output tls-stream)))
 
-(defun gemini-serve-file (request)
-  (let* ((path (if (str:starts-with-p "/" request) (str:s-rest request) request))
-         (path (str:replace-all "../" "" path))
-         (path (str:concat *germinal-root* "/" path)))
-    (handler-case
-        (if (probe-file path)
-            (progn
-              (if (not (member :other-read (osicat:file-permissions path)))
-                  (list "2	text/plain" "Permission denied")
-                  (let* ((mime-type (mimes:mime path))
-                         (status (str:concat "2	" mime-type))
-                         (body (alexandria:read-file-into-string path)))
-                    (list status body))))
-              (list "4	Not found" ""))
-      (stream-error () ; can't read because it's a directory
-        (gemini-serve-directory request)))))
 
-(defun gemini-serve-directory (request)
-  (let* ((path (if (str:starts-with-p "/" request) (str:s-rest request) request))
+(defun gemini-serve-file-or-directory (request-path)
+  (let* ((path (if (str:starts-with-p "/" request-path)
+                   (str:s-rest request-path)
+                   request-path))
          (path (str:replace-all "../" "" path))
-         (path (str:concat *germinal-root* "/" path)))
+         (path (str:concat *germinal-root* "/" path))
+         (path-kind (osicat:file-kind path :follow-symlinks t)))
+    (cond
+      ((eq :directory path-kind) (gemini-serve-directory path) )
+      ((eq :regular-file path-kind) (gemini-serve-file path))
+      (t (list "4	Not Found" "")))))
+
+(defun gemini-serve-file (path)
+  (if (probe-file path)
+      (progn
+        (if (not (member :other-read (osicat:file-permissions path)))
+            (list "2	text/plain" "Permission denied")
+            (let* ((mime-type (mimes:mime path))
+                   (status (str:concat "2	" mime-type))
+                   (body (alexandria:read-file-into-string path)))
+              (list status body))))
+      (list "4	Not found" "")))
+
+(defun gemini-serve-directory (path)
    (if (probe-file (str:concat path "index.gmi"))
-     (gemini-serve-file (str:concat request "/index.gmi"))
-     (gemini-generate-directory-list path))))
+     (gemini-serve-file (str:concat path "/index.gmi"))
+     (gemini-generate-directory-list path)))
 
 (defun gemini-generate-directory-list (path)
   (list "5	Not implemented" "Directory list: not implemented"))
