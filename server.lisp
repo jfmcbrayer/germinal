@@ -3,14 +3,8 @@
 (defpackage :germinal
   (:use :cl)
   (:import-from :cl+ssl
-                #:make-context
-                #:with-global-context
-                #:make-ssl-server-stream
-   )
+                #:make-ssl-server-stream)
   (:import-from :usocket
-                #:socket-listen
-                #:socket-accept
-                #:socket-close
                 #:socket-server)
   (:import-from :str
                 #:split
@@ -80,26 +74,28 @@
                          (status (str:concat "2	" mime-type))
                          (body (alexandria:read-file-into-string path)))
                     (list status body))))
-            (list (str:concat "4	Path not found " path) ""))
+            (list "4	Not found" ""))
       (stream-error () ; can't read because it's a directory
         (gemini-serve-directory path)))))
 
 (defun gemini-serve-directory (request)
-  (let* ((request (if (not (str:ends-with-p "/" request))
-                           (str:concat request "/")
-                      request))
-         (status "2	text/gemini")
-         (files (map 'list #'file-namestring
-                     (uiop:directory-files request)))
-         (directories (map 'list
-                           (lambda (s)
-                             (car (last (str:split-omit-nulls
-                                         "/" (directory-namestring s)))))
-                           (uiop:subdirectories request)))
-         (body (str:join (string #\Newline)
-                         (list "# Subdirectories"
-                               (str:join (string #\Newline) directories)
-                               (string #\Newline)
-                               "# Files"
-                               (str:join (string #\Newline) files)))))
-    (list status body)))
+  (if (probe-file (str:concat request "index.gmi"))
+      (gemini-serve-file (str:concat request "index.gmi"))
+      (let* ((request (if (not (str:ends-with-p "/" request))
+                          (str:concat request "/")
+                          request))
+             (status "2	text/gemini")
+             (files (map 'list #'file-namestring
+                         (uiop:directory-files request)))
+             (directories (map 'list
+                               (lambda (s)
+                                 (car (last (str:split-omit-nulls
+                                             "/" (directory-namestring s)))))
+                               (uiop:subdirectories request)))
+             (body (str:join (string #\Newline)
+                             (list "# Subdirectories"
+                                   (str:join (string #\Newline) directories)
+                                   (string #\Newline)
+                                   "# Files"
+                                   (str:join (string #\Newline) files)))))
+        (list status body))))
