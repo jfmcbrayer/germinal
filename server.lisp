@@ -44,11 +44,11 @@
   (let ((s (make-string-output-stream)))
     (loop
       for empty = t then nil
-      for c = (read-char stream eof-error-p nil)
-      while (and c (not (eql c #\return)))
+      for c = (read-byte stream eof-error-p nil)
+      while (and c (not (eql (code-char c) #\return)))
       do
-         (unless (eql c #\newline)
-           (write-char c s))
+         (unless (eql (code-char c) #\newline)
+           (write-char (code-char c) s))
       finally
          (return
            (if empty nil (get-output-stream-string s))))))
@@ -56,12 +56,12 @@
 (defun gemini-handler (stream)
   (let* ((tls-stream
            (cl+ssl:make-ssl-server-stream stream
-                                          :external-format '(:utf-8)
                                           :certificate "cert.pem"
                                           :key "key.pem"))
          (request (read-line-crlf tls-stream))
          (response (gemini-serve-file-or-directory request)))
-    (write-sequence (str:concat (nth 0 response) '(#\return #\newline))
+    (write-sequence
+     (babel:string-to-octets (str:concat (nth 0 response) '(#\return #\newline)))
                     tls-stream)
     (force-output tls-stream)
     (write-sequence (nth 1 response) tls-stream)
@@ -69,24 +69,27 @@
 
 
 (defun gemini-serve-file-or-directory (request)
-  (let* ((path (if (str:starts-with-p "/" request)
-                   (str:s-rest request)
-                   request))
-         (path (str:replace-all "../" "" path))
-         (path (str:concat *germinal-root* "/" path))
-         (path-kind (osicat:file-kind path :follow-symlinks t)))
-    (if (not (member :other-read (osicat:file-permissions path)))
-        (list "4	Not Found" "")
-        (cond
-          ((eq :directory path-kind) (gemini-serve-directory path))
-          ((eq :regular-file path-kind) (gemini-serve-file path))
-          (t (list "4	Not Found" ""))))))
+  (handler-case 
+      (let* ((path (if (str:starts-with-p "/" request)
+                       (str:s-rest request)
+                       request))
+             (path (str:replace-all "../" "" path))
+             (path (str:concat *germinal-root* "/" path))
+             (path-kind (osicat:file-kind path :follow-symlinks t)))
+        (if (not (member :other-read (osicat:file-permissions path)))
+            (list "4	Not Found" "") ;; In lieu of a permission-denied status
+            (cond
+              ((eq :directory path-kind) (gemini-serve-directory path))
+              ((eq :regular-file path-kind) (gemini-serve-file path))
+              (t (list "4	Not Found" "")))))
+    (osicat-posix:enoent () (list "4	Not Found" ""))))
+    ;(error () (list "5	Internal server error" "Internal server error"))))
 
 (defun gemini-serve-file (path)
   (list "2	text/plain" "Permission denied")
   (let* ((mime-type (mimes:mime path))
          (status (str:concat "2	" mime-type))
-         (body (alexandria:read-file-into-string path)))
+         (body (alexandria:read-file-into-byte-vector path)))
     (list status body)))
 
 (defun gemini-serve-directory (path)
@@ -113,7 +116,8 @@
      (let ((cl-interpol:*list-delimiter* #\Newline))
        #?"@{files}\n\n")
      body)
-    (list status (get-output-stream-string body))))
+    (list status (babel:string-to-octets (get-output-stream-string body)
+                                         :encoding :utf-8))))
 
 (defun linkify (path &optional text)
   (let ((path-name (de-prefix(namestring path))))
