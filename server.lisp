@@ -34,6 +34,8 @@
   ;; update mime types
   (setf (gethash "org" mimes:*mime-db*) "text/org-mode")
   (setf (gethash "gmi" mimes:*mime-db*) "text/gemini")
+  (write-line #?"Listening on ${*germinal-host*} port ${*germinal-port*}")
+  (force-output)
   (usocket:socket-server host port #'gemini-handler ()
                          :multi-threading t
                          :element-type '(unsigned-byte 8)))
