@@ -2,15 +2,37 @@
 
 Germinal is a server for the [[gopher://zaibatsu.circumlunar.space/1/~solderpunk/gemini][Gemini Protocol]], written in Common Lisp.
 
-It is named after the early 20th century Yiddish anarchist newspaper [[https://en.wikipedia.org/wiki/Germinal_(journal)][Germinal]]. 
+It is named after the early 20th century Yiddish-language anarchist newspaper
+[[https://en.wikipedia.org/wiki/Germinal_(journal)][Germinal]]. I wanted to name it after an anarchist publication to convey the idea
+of people sharing information and ideas with each other, in contrast to the way
+the web is used to push advertising from corporations to people. And it happened
+that Germinal shares some sounds with Gemini.
+
+** Features
+
+*** Current
+    - Serves any type of document with an appropriate mime type.
+    - Serves .gmi files as text/gemini, the gemini mapfile format.
+    - Serves index.gml as a directory listing, if it exists
+    - Serves a simple directory listing for directories without index.gml
+    - Serves only world-readable content, much like [[http://www.gophernicus.org/][Gophernicus]].
+
+*** Planned
+    - Configuration by environment variables, command-line, or config file
+    - Keep up to date with protocol changes
+    
+*** Maybe
+    - authentication by client certificate
 
 ** Installation
 
-TODO
+   This is still a bit of a hack, and if you don't have a working Common Lisp
+   development environment, you will probably have trouble getting it running.
+   The included ~build.sh~ will build a single executable, but unfortunately it
+   depends on a shared library that will be somewhere in your ~/.cache folder...  
 
 ** Usage
 
-TODO
-
-
-
+   Run ~germinal~. It will listen on port 1965 on all interfaces, and serve
+   content from ~/var/gemini/~. It will only serve world-readable files,
+   regardless of what user it is running as.
