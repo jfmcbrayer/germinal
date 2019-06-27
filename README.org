@@ -31,6 +31,14 @@ that Germinal shares some sounds with Gemini.
    The included ~build.sh~ will build a single executable, but unfortunately it
    depends on a shared library that will be somewhere in your ~/.cache folder...  
 
+   You also need to generate a self-signed cert and key. Currently these need to
+   be named cert.pem and key.pem and be stored in the working directory germinal
+   will be run from. This will improve in the future when I write the
+   configuration parts.  You can generate the cert like this:
+
+   ~openssl req -x509 -newkey rsa:4096 -keyout key.pem -out cert.pem -days 365 -nodes~
+
+
 ** Usage
 
    Run ~germinal~. It will listen on port 1965 on all interfaces, and serve
