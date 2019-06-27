@@ -93,7 +93,7 @@
     (list status body)))
 
 (defun gemini-serve-directory (path)
-   (if (probe-file (str:concat path "index.gmi"))
+   (if (probe-file (str:concat path "/index.gmi"))
      (gemini-serve-file (str:concat path "/index.gmi"))
      (gemini-generate-directory-list path)))
 
