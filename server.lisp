@@ -78,23 +78,23 @@
     (if (not (member :other-read (osicat:file-permissions path)))
         (list "4	Not Found" "")
         (cond
-          ((eq :directory path-kind) (gemini-serve-directory path request))
-          ((eq :regular-file path-kind) (gemini-serve-file path request))
+          ((eq :directory path-kind) (gemini-serve-directory path))
+          ((eq :regular-file path-kind) (gemini-serve-file path))
           (t (list "4	Not Found" ""))))))
 
-(defun gemini-serve-file (path request)
+(defun gemini-serve-file (path)
   (list "2	text/plain" "Permission denied")
   (let* ((mime-type (mimes:mime path))
          (status (str:concat "2	" mime-type))
          (body (alexandria:read-file-into-string path)))
     (list status body)))
 
-(defun gemini-serve-directory (path request)
+(defun gemini-serve-directory (path)
    (if (probe-file (str:concat path "index.gmi"))
-     (gemini-serve-file (str:concat path "/index.gmi") request)
-     (gemini-generate-directory-list path request)))
+     (gemini-serve-file (str:concat path "/index.gmi"))
+     (gemini-generate-directory-list path)))
 
-(defun gemini-generate-directory-list (path request)
+(defun gemini-generate-directory-list (path)
   (let* ((subdirectories (map 'list #'linkify
                               (uiop:subdirectories (str:concat path "/"))))
          (files (map 'list #'linkify
