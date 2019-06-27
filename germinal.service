@@ -1,0 +1,12 @@
+[Unit]
+Description=Germinal, a gemini server
+
+[Service]
+WorkingDirectory=/usr/local/bin
+ExecStart=/usr/local/bin/germinal
+Type=simple
+Restart=always
+RestartSec=10
+User=nobody
+Group=nobody
+
