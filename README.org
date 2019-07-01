@@ -20,6 +20,7 @@ that Germinal shares some sounds with Gemini.
 *** Planned
     - Configuration by environment variables, command-line, or config file
     - Keep up to date with protocol changes
+    - Logging (though not *too much* logging)
     
 *** Maybe
     - authentication by client certificate
