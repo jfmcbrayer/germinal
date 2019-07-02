@@ -24,6 +24,7 @@ that Germinal shares some sounds with Gemini.
     
 *** Maybe
     - authentication by client certificate
+    - cgi-bin support
 
 ** Installation
 
