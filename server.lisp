@@ -15,11 +15,21 @@
   ;; update mime types
   (setf (gethash "org" mimes:*mime-db*) "text/org-mode")
   (setf (gethash "gmi" mimes:*mime-db*) "text/gemini")
+  (get-config-env)
   (write-line #?"Listening on ${*germinal-host*} port ${*germinal-port*}")
   (force-output)
   (usocket:socket-server host port #'gemini-handler ()
                          :multi-threading t
                          :element-type '(unsigned-byte 8)))
+
+(defun get-config-env ()
+  "Get the configuration from the environment or command-line"
+  (let ((germinal-root (osicat:environment-variable "GERMINAL_ROOT"))
+        (germinal-host (osicat:environment-variable "GERMINAL_HOST"))
+        (germinal-port (osicat:environment-variable "GERMINAL_PORT")))
+    (if germinal-root (setf *germinal-root* germinal-root))
+    (if germinal-host (setf *germinal-host* germinal-host))
+    (if germinal-port (setf *germinal-port* (parse-integer germinal-port)))))
 
 (defun read-line-crlf (stream &optional eof-error-p)
   (let ((s (make-string-output-stream)))
