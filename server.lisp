@@ -2,26 +2,7 @@
 
 (defpackage :germinal
   (:use :cl)
-  (:import-from :cl+ssl
-                #:make-ssl-server-stream)
-  (:import-from :usocket
-                #:socket-server)
-  (:import-from :str
-                #:split
-                #:join
-                #:concat
-                #:starts-with-p
-                #:ends-with-p)
-  (:import-from :babel
-                #:octets-to-string
-                #:string-to-octets)
-  (:import-from :mimes
-                #:*mime-db*
-                #:mime)
-  (:import-from :osicat
-                #:file-permissions)
-  (:export #:start)
-  )
+  (:export #:start))
 
 (in-package :germinal)
 (interpol:enable-interpol-syntax)
