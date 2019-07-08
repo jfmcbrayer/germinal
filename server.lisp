@@ -2,7 +2,8 @@
 
 (defpackage :germinal
   (:use :cl)
-  (:export #:start))
+  (:export #:start
+           #:start-cli))
 
 (in-package :germinal)
 (interpol:enable-interpol-syntax)
@@ -11,25 +12,72 @@
 (defvar *germinal-host* "0.0.0.0")
 (defvar *germinal-port* 1965)
 
+(opts:define-opts
+  (:name :help
+   :description "Print this help text"
+   :short #\h
+   :long "help")
+  (:name :root
+   :description "Path to the root of the directory tree to serve. Default /var/gemini."
+   :short #\r
+   :long "root"
+   :arg-parser #'identity)
+  (:name :port
+   :description "Port number to listen on. Default 1965."
+   :short #\p
+   :long "port"
+   :arg-parser #'parse-integer) ;; <- takes an argument
+  (:name :host
+   :description "Hostname or IP address to bind to. Default 0.0.0.0"
+   :short #\i
+   :long "host"
+   :arg-parser #'identity))
+
 (defun start (&key (host *germinal-host*) (port *germinal-port*))
+  "Start the germinal server, listening to HOST and PORT."
   ;; update mime types
   (setf (gethash "org" mimes:*mime-db*) "text/org-mode")
   (setf (gethash "gmi" mimes:*mime-db*) "text/gemini")
-  (get-config-env)
-  (write-line #?"Listening on ${*germinal-host*} port ${*germinal-port*}")
+  (write-line #?"Listening on ${host} port ${port}")
   (force-output)
   (usocket:socket-server host port #'gemini-handler ()
                          :multi-threading t
                          :element-type '(unsigned-byte 8)))
 
+(defun start-cli ()
+  "Start the germinal server, taking config from the environment or command-line."
+  (get-config-env)
+  (get-config-args)
+  (start))
+
 (defun get-config-env ()
-  "Get the configuration from the environment or command-line"
+  "Get the configuration from the environment"
   (let ((germinal-root (osicat:environment-variable "GERMINAL_ROOT"))
         (germinal-host (osicat:environment-variable "GERMINAL_HOST"))
         (germinal-port (osicat:environment-variable "GERMINAL_PORT")))
-    (if germinal-root (setf *germinal-root* germinal-root))
-    (if germinal-host (setf *germinal-host* germinal-host))
-    (if germinal-port (setf *germinal-port* (parse-integer germinal-port)))))
+    (if germinal-root (setq *germinal-root* germinal-root))
+    (if germinal-host (setq *germinal-host* germinal-host))
+    (if germinal-port (setq *germinal-port* (parse-integer germinal-port)))))
+
+(defun get-config-args ()
+  "Get the configuration from the command-line"
+  (multiple-value-bind (options free-args)
+      (handler-case (opts:get-opts)
+        (error ()
+          (opts:describe)
+          (opts:exit)))
+    (if (getf options :help)
+              (progn
+                (opts:describe
+                 :prefix "Germinal, a gemini server.  Usage:"
+                 :args "[keywords]")
+                (opts:exit)))
+    (if (getf options :root )
+        (setq *germinal-root* (getf options :root)))
+    (if (getf options :host)
+        (setq *germinal-host* (getf options :host)))
+    (if (getf options :port)
+        (setq *germinal-port* (getf options :port)))))
 
 (defun read-line-crlf (stream &optional eof-error-p)
   (let ((s (make-string-output-stream)))

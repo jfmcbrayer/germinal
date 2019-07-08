@@ -17,6 +17,7 @@
                :trivial-mimes
                :osicat
                :cl-interpol
+               :unix-opts
                )
   :components (
                (:file "server")
@@ -24,5 +25,5 @@
   :description "A Gemini protocol server."
   :build-operation "program-op"
   :build-pathname "germinal"
-  :entry-point "germinal:start"
+  :entry-point "germinal:start-cli"
   )
