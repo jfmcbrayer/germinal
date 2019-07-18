@@ -53,4 +53,5 @@ that Germinal shares some sounds with Gemini.
 
    Run ~germinal~. It will listen on port 1965 on all interfaces, and serve
    content from ~/var/gemini/~. It will only serve world-readable files,
-   regardless of what user it is running as.
+   regardless of what user it is running as. Or ~germinal --help~ to get the
+   list of command-line arguments to change the interface, port, or root.
