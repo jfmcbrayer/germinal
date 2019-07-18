@@ -33,6 +33,14 @@ that Germinal shares some sounds with Gemini.
    The included ~build.sh~ will build a single executable, but unfortunately it
    depends on a shared library that will be somewhere in your ~/.cache folder...  
 
+   Germinal has been tested on SBCL and ECL. It runs fine on both, but I haven't
+   been able to build a working binary distribution on ECL.
+
+   You will need OpenSSL headers and libraries installed to build the cl+ssl
+   dependency. On Debian this is the libssl-dev package; on Fedora it is 
+   OpenSSL-devel. It may be something else on your platform. You'll also need gcc,
+   for the binary dependencies that quicklisp will build.
+
    You also need to generate a self-signed cert and key. Currently these need to
    be named cert.pem and key.pem and be stored in the working directory germinal
    will be run from. This will improve in the future when I write the
