@@ -161,8 +161,8 @@
 (defun linkify (path &optional text)
   (let ((path-name (de-prefix(namestring path))))
     (if text
-        #?"[$(text)|$(path-name)]"
-        #?"[$(path-name)|$(path-name)]"
+        #?"=> $(path-name)	$(text)"
+        #?"=> $(path-name)"
         )))
 
 (defun de-prefix (path &optional (prefix *germinal-root*))
