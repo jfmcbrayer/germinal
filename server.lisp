@@ -1,10 +1,13 @@
-(in-package :cl-user)
+;;;; The Germinal server. This is pretty much self-contained.
 
+;;; Preamble
+(in-package :cl-user)
 (defpackage :germinal
   (:use :cl)
   (:export #:start
            #:start-cli))
 
+;;; Package-level things
 (in-package :germinal)
 (interpol:enable-interpol-syntax)
 
@@ -33,6 +36,8 @@
    :long "host"
    :arg-parser #'identity))
 
+;;; Entry functions
+
 (defun start (&key (host *germinal-host*) (port *germinal-port*))
   "Start the germinal server, listening to HOST and PORT."
   ;; update mime types
@@ -50,6 +55,7 @@
   (get-config-args)
   (start))
 
+;;; Internal functions
 (defun get-config-env ()
   "Get the configuration from the environment"
   (let ((germinal-root (osicat:environment-variable "GERMINAL_ROOT"))
@@ -80,6 +86,7 @@
         (setq *germinal-port* (getf options :port)))))
 
 (defun read-line-crlf (stream &optional eof-error-p)
+  "Read a CRLF-terminated line from a binary stream and return a string"
   (let ((s (make-string-output-stream)))
     (loop
       for empty = t then nil
@@ -93,6 +100,7 @@
            (if empty nil (get-output-stream-string s))))))
 
 (defun gemini-handler (stream)
+  "The main Gemini request handler. Sets up TLS and sets up request and response"
   (let* ((tls-stream
            (cl+ssl:make-ssl-server-stream stream
                                           :certificate "cert.pem"
@@ -108,6 +116,7 @@
 
 
 (defun gemini-serve-file-or-directory (request)
+  "Given a gemini request (string), try to respond by serving a file or directory listing."
   (handler-case 
       (let* ((path (if (str:starts-with-p "/" request)
                        (str:s-rest request)
@@ -125,18 +134,21 @@
     ;(error () (list "5	Internal server error" "Internal server error"))))
 
 (defun gemini-serve-file (path)
-  (list "2	text/plain" "Permission denied")
+  "Given an accessible file path, serve it as a gemini response"
   (let* ((mime-type (mimes:mime path))
          (status (str:concat "2	" mime-type))
          (body (alexandria:read-file-into-byte-vector path)))
     (list status body)))
 
 (defun gemini-serve-directory (path)
+  "Given an accessible directory, serve either an index.gmi file or a directory listing as
+a gemini response"
    (if (probe-file (str:concat path "/index.gmi"))
      (gemini-serve-file (str:concat path "/index.gmi"))
      (gemini-generate-directory-list path)))
 
 (defun gemini-generate-directory-list (path)
+  "Given an accessible directory path, generate a directory listing and serve it as a gemini response"
   (let* ((subdirectories (map 'list #'linkify
                               (uiop:subdirectories (str:concat path "/"))))
          (files (map 'list #'linkify
@@ -159,6 +171,7 @@
                                          :encoding :utf-8))))
 
 (defun linkify (path &optional text)
+  "Format a path name with optional description as a gemini link"
   (let ((path-name (de-prefix(namestring path))))
     (if text
         #?"=> $(path-name)	$(text)"
@@ -166,4 +179,5 @@
         )))
 
 (defun de-prefix (path &optional (prefix *germinal-root*))
+  "Strip *germinal-root* from a pathname"
   (str:replace-all prefix "" path))
