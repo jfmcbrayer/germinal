@@ -3,7 +3,7 @@
 ;;; Preamble
 (in-package :cl-user)
 (defpackage :germinal
-  (:use :cl)
+  (:use :cl :cl+ssl)
   (:export #:start
            #:start-cli))
 
@@ -102,7 +102,7 @@
 (defun gemini-handler (stream)
   "The main Gemini request handler. Sets up TLS and sets up request and response"
   (let* ((tls-stream
-           (cl+ssl:make-ssl-server-stream stream
+           (make-ssl-server-stream stream
                                           :certificate "cert.pem"
                                           :key "key.pem"))
          (request (read-line-crlf tls-stream))
