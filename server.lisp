@@ -101,7 +101,7 @@
 
 (defun gemini-handler (stream)
   "The main Gemini request handler. Sets up TLS and sets up request and response"
-  (let* ((*ssl-global-context
+  (let* ((*ssl-global-context*
            (make-context :disabled-protocols (list +ssl-op-no-sslv2+ +ssl-op-no-sslv3+
                                                    +ssl-op-no-tlsv1+ +ssl-op-no-tlsv1-1+
                                                    +ssl-op-no-tlsv1-2+)))
