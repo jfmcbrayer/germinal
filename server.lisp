@@ -14,6 +14,8 @@
 (defvar *germinal-root* "/var/gemini")
 (defvar *germinal-host* "0.0.0.0")
 (defvar *germinal-port* 1965)
+(defvar *germinal-cert* "/etc/germinal/cert.pem")
+(defvar *germinal-cert-key* "/etc/germinal/key.pem")
 
 (opts:define-opts
   (:name :help
@@ -34,6 +36,16 @@
    :description "Hostname or IP address to bind to. Default 0.0.0.0"
    :short #\i
    :long "host"
+   :arg-parser #'identity)
+  (:name :cert
+   :description "Path to the TLS server certificate to use"
+   :short #\c
+   :long "cert"
+   :arg-parser #'identity)
+  (:name :key
+   :description "Path to the private key file for the TLS server certificate"
+   :short #\k
+   :long "key"
    :arg-parser #'identity))
 
 ;;; Entry functions
@@ -60,10 +72,14 @@
   "Get the configuration from the environment"
   (let ((germinal-root (osicat:environment-variable "GERMINAL_ROOT"))
         (germinal-host (osicat:environment-variable "GERMINAL_HOST"))
-        (germinal-port (osicat:environment-variable "GERMINAL_PORT")))
+        (germinal-port (osicat:environment-variable "GERMINAL_PORT"))
+        (germinal-cert (osicat:environment-variable "GERMINAL_CERT"))
+        (germinal-cert-key (osicat:environment-variable "GERMINAL_CERT_KEY")))
     (if germinal-root (setq *germinal-root* germinal-root))
     (if germinal-host (setq *germinal-host* germinal-host))
-    (if germinal-port (setq *germinal-port* (parse-integer germinal-port)))))
+    (if germinal-port (setq *germinal-port* (parse-integer germinal-port)))
+    (if germinal-cert (setq *germinal-cert* germinal-cert))
+    (if germinal-cert-key (setq *germinal-cert-key* germinal-cert-key))))
 
 (defun get-config-args ()
   "Get the configuration from the command-line"
@@ -83,7 +99,11 @@
     (if (getf options :host)
         (setq *germinal-host* (getf options :host)))
     (if (getf options :port)
-        (setq *germinal-port* (getf options :port)))))
+        (setq *germinal-port* (getf options :port)))
+    (if (getf options :cert)
+        (setq *germinal-cert* (getf options :cert)))
+    (if (getf options :key)
+        (setq *germinal-cert-key* (getf options :key)))))
 
 (defun read-line-crlf (stream &optional eof-error-p)
   "Read a CRLF-terminated line from a binary stream and return a string"
@@ -101,14 +121,14 @@
 
 (defun gemini-handler (stream)
   "The main Gemini request handler. Sets up TLS and sets up request and response"
-  (let* ((*ssl-global-context*
-           (make-context :disabled-protocols (list +ssl-op-no-sslv2+ +ssl-op-no-sslv3+
+  (let* ((cl+ssl::*ssl-global-context*
+           (make-context :method :tls-method :disabled-protocols (list +ssl-op-no-sslv2+ +ssl-op-no-sslv3+
                                                    +ssl-op-no-tlsv1+ +ssl-op-no-tlsv1-1+
                                                    +ssl-op-no-tlsv1-2+)))
          (tls-stream
            (make-ssl-server-stream stream
-                                   :certificate "cert.pem"
-                                   :key "key.pem"))
+                                   :certificate *germinal-cert*
+                                   :key *germinal-cert-key*))
          (request (read-line-crlf tls-stream))
          (response (gemini-serve-file-or-directory request)))
     (write-sequence
@@ -117,7 +137,6 @@
     (force-output tls-stream)
     (write-sequence (nth 1 response) tls-stream)
     (force-output tls-stream)))
-
 
 (defun gemini-serve-file-or-directory (request)
   "Given a gemini request (string), try to respond by serving a file or directory listing."
