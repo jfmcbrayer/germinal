@@ -101,22 +101,24 @@
 
 (defun gemini-handler (stream)
   "The main Gemini request handler. Sets up TLS and sets up request and response"
-  (let* ((*ssl-global-context*
-           (make-context :disabled-protocols (list +ssl-op-no-sslv2+ +ssl-op-no-sslv3+
-                                                   +ssl-op-no-tlsv1+ +ssl-op-no-tlsv1-1+
-                                                   +ssl-op-no-tlsv1-2+)))
-         (tls-stream
-           (make-ssl-server-stream stream
-                                   :certificate "cert.pem"
-                                   :key "key.pem"))
-         (request (read-line-crlf tls-stream))
-         (response (gemini-serve-file-or-directory request)))
-    (write-sequence
-     (babel:string-to-octets (str:concat (nth 0 response) '(#\return #\newline)))
-     tls-stream)
-    (force-output tls-stream)
-    (write-sequence (nth 1 response) tls-stream)
-    (force-output tls-stream)))
+  (handler-case
+    (let* ((*ssl-global-context*
+             (make-context :disabled-protocols (list +ssl-op-no-sslv2+ +ssl-op-no-sslv3+
+                                                     +ssl-op-no-tlsv1+ +ssl-op-no-tlsv1-1+
+                                                     +ssl-op-no-tlsv1-2+)))
+           (tls-stream
+             (make-ssl-server-stream stream
+                                     :certificate "cert.pem"
+                                     :key "key.pem"))
+           (request (read-line-crlf tls-stream))
+           (response (gemini-serve-file-or-directory request)))
+      (write-sequence
+       (babel:string-to-octets (str:concat (nth 0 response) '(#\return #\newline)))
+       tls-stream)
+      (force-output tls-stream)
+      (write-sequence (nth 1 response) tls-stream)
+      (force-output tls-stream))
+    (error () nil)))
 
 
 (defun gemini-serve-file-or-directory (request)
