@@ -153,18 +153,18 @@
              (path (str:concat *germinal-root* "/" path))
              (path-kind (osicat:file-kind path :follow-symlinks t)))
         (if (not (member :other-read (osicat:file-permissions path)))
-            (list "4	Not Found" "") ;; In lieu of a permission-denied status
+            (list "51	Not Found" "") ;; In lieu of a permission-denied status
             (cond
               ((eq :directory path-kind) (gemini-serve-directory path))
               ((eq :regular-file path-kind) (gemini-serve-file path))
-              (t (list "4	Not Found" "")))))
-    (osicat-posix:enoent () (list "4	Not Found" ""))))
-    ;(error () (list "5	Internal server error" "Internal server error"))))
+              (t (list "51	Not Found" "")))))
+    (osicat-posix:enoent () (list "51	Not Found" ""))
+    (error () (list "40	Internal server error" "Internal server error"))))
 
 (defun gemini-serve-file (path)
   "Given an accessible file path, serve it as a gemini response"
   (let* ((mime-type (mimes:mime path))
-         (status (str:concat "2	" mime-type))
+         (status (str:concat "20	" mime-type))
          (body (alexandria:read-file-into-byte-vector path)))
     (list status body)))
 
@@ -181,7 +181,7 @@ a gemini response"
                               (uiop:subdirectories (str:concat path "/"))))
          (files (map 'list #'linkify
                      (uiop:directory-files (str:concat path "/"))))
-         (status "2	text/gemini")
+         (status "20	text/gemini")
          (body (make-string-output-stream)))
     (write-sequence #?"# Directory listing for ${(de-prefix path)}\n\n"
                     body)
