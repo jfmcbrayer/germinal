@@ -18,6 +18,7 @@
                :osicat
                :cl-interpol
                :unix-opts
+               :quri
                )
   :components (
                (:file "server")

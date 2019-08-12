@@ -4,6 +4,11 @@
 (in-package :cl-user)
 (defpackage :germinal
   (:use :cl :cl+ssl)
+  (:import-from :quri
+                #:uri
+                #:uri-scheme
+                #:uri-host
+                #:uri-path)
   (:export #:start
            #:start-cli))
 
@@ -50,7 +55,7 @@
 
 ;;; Entry functions
 
-(defun start (&key (host *germinal-host*) (port *germinal-port*))
+(defun start (&key (host *germinal-host*) (port *germinal-port*) (background nil))
   "Start the germinal server, listening to HOST and PORT."
   ;; update mime types
   (setf (gethash "org" mimes:*mime-db*) "text/org-mode")
@@ -59,7 +64,8 @@
   (force-output)
   (usocket:socket-server host port #'gemini-handler ()
                          :multi-threading t
-                         :element-type '(unsigned-byte 8)))
+                         :element-type '(unsigned-byte 8)
+                         :in-new-thread background))
 
 (defun start-cli ()
   "Start the germinal server, taking config from the environment or command-line."
@@ -122,7 +128,7 @@
 (defun gemini-handler (stream)
   "The main Gemini request handler. Sets up TLS and sets up request and response"
   (let* ((cl+ssl::*ssl-global-context*
-           (make-context :method :tls-method :disabled-protocols (list +ssl-op-no-sslv2+ +ssl-op-no-sslv3+
+           (make-context :disabled-protocols (list +ssl-op-no-sslv2+ +ssl-op-no-sslv3+
                                                    +ssl-op-no-tlsv1+ +ssl-op-no-tlsv1-1+
                                                    +ssl-op-no-tlsv1-2+)))
          (tls-stream
@@ -141,9 +147,8 @@
 (defun gemini-serve-file-or-directory (request)
   "Given a gemini request (string), try to respond by serving a file or directory listing."
   (handler-case 
-      (let* ((path (if (str:starts-with-p "/" request)
-                       (str:s-rest request)
-                       request))
+      (let* ((request-uri (uri request))
+             (path (uri-path request-uri))
              (path (str:replace-all "../" "" path))
              (path (str:concat *germinal-root* "/" path))
              (path-kind (osicat:file-kind path :follow-symlinks t)))
