@@ -9,6 +9,8 @@
                 #:uri-scheme
                 #:uri-host
                 #:uri-path)
+  (:import-from :cl-toml
+                #:parse-file)
   (:export #:start
            #:start-cli))
 
@@ -27,6 +29,10 @@
    :description "Print this help text"
    :short #\h
    :long "help")
+  (:name :config
+   :description "Path to the configuration file to use. Default /etc/germinal/config.toml"
+   :short #\c
+   :long "config")
   (:name :root
    :description "Path to the root of the directory tree to serve. Default /var/gemini."
    :short #\r

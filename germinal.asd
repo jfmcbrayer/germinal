@@ -19,6 +19,7 @@
                :cl-interpol
                :unix-opts
                :quri
+               :cl-toml
                )
   :components (
                (:file "server")
