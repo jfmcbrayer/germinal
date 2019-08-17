@@ -122,6 +122,15 @@
     (if (getf options :config)
         (setq *germinal-config-file* (getf options :config)))))
 
+(defun get-config-file-path ()
+  "Use command-line, environment, or default to find config file"
+  (let ((env-config (osicat:environment-variable "GERMINAL_CONFiG"))
+        (opts-config (getf (opts:get-opts) :config)))
+    (cond
+      (opts-config opts-config)
+      (env-config env-config)
+      (t *germinal-config-file*))))
+
 (defun read-line-crlf (stream &optional eof-error-p)
   "Read a CRLF-terminated line from a binary stream and return a string"
   (let ((s (make-string-output-stream)))
