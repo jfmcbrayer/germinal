@@ -1,0 +1,20 @@
+[core]
+root = "/var/gemini"
+host = "0.0.0.0"
+port = 1965
+cert = "/etc/germinal/cert.pem"
+key = "/etc/germinal/key.pem"
+
+# Virtual hosts are not yet implemented
+[virtual-hosts]
+default = "/var/gemini"
+"carcosa.net" = "/var/gemini"
+"journal.carcosa.net" = "/var/gemini/journal"
+
+# Proxying is not yet implemented
+[proxy]
+proxy-gopher = false
+proxy-gopher-from = "192.168.1.0/24"
+proxy-gemini = false
+proxy-gemini-from = "127.0.0.1/8"
+
