@@ -23,6 +23,7 @@
 (defvar *germinal-port* 1965)
 (defvar *germinal-cert* "/etc/germinal/cert.pem")
 (defvar *germinal-cert-key* "/etc/germinal/key.pem")
+(defvar *germinal-config-file* "/etc/germinal/config.toml")
 
 (opts:define-opts
   (:name :help
@@ -86,12 +87,14 @@
         (germinal-host (osicat:environment-variable "GERMINAL_HOST"))
         (germinal-port (osicat:environment-variable "GERMINAL_PORT"))
         (germinal-cert (osicat:environment-variable "GERMINAL_CERT"))
-        (germinal-cert-key (osicat:environment-variable "GERMINAL_CERT_KEY")))
+        (germinal-cert-key (osicat:environment-variable "GERMINAL_CERT_KEY"))
+        (germinal-config-file (osicat:environment-variable "GERMINAL_CONFiG")))
     (if germinal-root (setq *germinal-root* germinal-root))
     (if germinal-host (setq *germinal-host* germinal-host))
     (if germinal-port (setq *germinal-port* (parse-integer germinal-port)))
     (if germinal-cert (setq *germinal-cert* germinal-cert))
-    (if germinal-cert-key (setq *germinal-cert-key* germinal-cert-key))))
+    (if germinal-cert-key (setq *germinal-cert-key* germinal-cert-key))
+    (if germinal-config-file (setq *germinal-config-file* germinal-config-file))))
 
 (defun get-config-args ()
   "Get the configuration from the command-line"
@@ -115,7 +118,9 @@
     (if (getf options :cert)
         (setq *germinal-cert* (getf options :cert)))
     (if (getf options :key)
-        (setq *germinal-cert-key* (getf options :key)))))
+        (setq *germinal-cert-key* (getf options :key)))
+    (if (getf options :config)
+        (setq *germinal-config-file* (getf options :config)))))
 
 (defun read-line-crlf (stream &optional eof-error-p)
   "Read a CRLF-terminated line from a binary stream and return a string"
