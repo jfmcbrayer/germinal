@@ -1,4 +1,5 @@
 [core]
+server-name = "localhost"
 root = "/var/gemini"
 host = "0.0.0.0"
 port = 1965
@@ -17,4 +18,3 @@ proxy-gopher = false
 proxy-gopher-from = "192.168.1.0/24"
 proxy-gemini = false
 proxy-gemini-from = "127.0.0.1/8"
-

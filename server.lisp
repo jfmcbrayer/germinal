@@ -18,6 +18,7 @@
 (in-package :germinal)
 (interpol:enable-interpol-syntax)
 
+(defvar *germinal-server-name* "localhost")
 (defvar *germinal-root* "/var/gemini")
 (defvar *germinal-host* "0.0.0.0")
 (defvar *germinal-port* 1965)
