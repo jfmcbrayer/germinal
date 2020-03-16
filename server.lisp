@@ -143,12 +143,12 @@
       (when (gethash "server-name" core) (setq *germinal-server-name* (gethash "server-name" core)))
       (when (gethash "root" core) (setq *germinal-root* (gethash "root" core)))
       (when (gethash "host" core) (setq *germinal-host*
-                                        (fix-string (gethash "host" core))))
+                                        (gethash "host" core)))
       (when (gethash "port" core) (setq *germinal-port* (gethash "port" core)))
       (when (gethash "cert" core) (setq *germinal-cert*
-                                        (fix-string (gethash "cert" core))))
+                                        (gethash "cert" core)))
       (when (gethash "key" core) (setq *germinal-cert-key*
-                                       (fix-string (gethash "key" core)))))
+                                        (gethash "key" core))))
     config))
 
 (defun read-line-crlf (stream &optional eof-error-p)
@@ -164,9 +164,6 @@
       finally
          (return
            (if empty nil (get-output-stream-string s))))))
-
-(defun fix-string (the-string)
-  (babel:octets-to-string (babel:string-to-octets the-string)))
 
 (defun gemini-handler (stream)
   "The main Gemini request handler. Sets up TLS and sets up request and response"
