@@ -25,6 +25,7 @@
 (defvar *germinal-cert* "/etc/germinal/cert.pem")
 (defvar *germinal-cert-key* "/etc/germinal/key.pem")
 (defvar *germinal-config-file* "/etc/germinal/config.toml")
+(defvar *germinal-pathname-blacklist* '(".git" ".git/"))
 
 (opts:define-opts
   (:name :help
@@ -189,7 +190,9 @@
   (handler-case 
       (let* ((path (get-path-for-url request))
              (path-kind (osicat:file-kind path :follow-symlinks t)))
-        (if (not (member :other-read (osicat:file-permissions path)))
+        (if (or (not (member :other-read (osicat:file-permissions path)))
+                (member (pathname-name path) *germinal-pathname-blacklist*
+                        :test #'string-equal))
             (list "51	Not Found" "") ;; In lieu of a permission-denied status
             (cond
               ((eq :directory path-kind) (gemini-serve-directory path))
