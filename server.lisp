@@ -34,8 +34,9 @@
    :long "help")
   (:name :config
    :description "Path to the configuration file to use. Default /etc/germinal/config.toml"
-   :short #\c
-   :long "config")
+   :short #\f
+   :long "config"
+   :arg-parser #'identity)
   (:name :root
    :description "Path to the root of the directory tree to serve. Default /var/gemini."
    :short #\r
@@ -78,6 +79,12 @@
 
 (defun start-cli ()
   "Start the germinal server, taking config from the environment or command-line."
+  (if (getf (opts:get-opts) :help)
+      (progn
+        (opts:describe
+         :prefix "Germinal, a gemini server.  Usage:"
+         :args "[keywords]")
+        (opts:exit)))
   (get-config-file)
   (get-config-env)
   (get-config-args)
@@ -91,7 +98,7 @@
         (germinal-port (osicat:environment-variable "GERMINAL_PORT"))
         (germinal-cert (osicat:environment-variable "GERMINAL_CERT"))
         (germinal-cert-key (osicat:environment-variable "GERMINAL_CERT_KEY"))
-        (germinal-config-file (osicat:environment-variable "GERMINAL_CONFiG")))
+        (germinal-config-file (osicat:environment-variable "GERMINAL_CONFIG")))
     (if germinal-root (setq *germinal-root* germinal-root))
     (if germinal-host (setq *germinal-host* germinal-host))
     (if germinal-port (setq *germinal-port* (parse-integer germinal-port)))
@@ -106,12 +113,6 @@
         (error ()
           (opts:describe)
           (opts:exit)))
-    (if (getf options :help)
-              (progn
-                (opts:describe
-                 :prefix "Germinal, a gemini server.  Usage:"
-                 :args "[keywords]")
-                (opts:exit)))
     (if (getf options :root )
         (setq *germinal-root* (getf options :root)))
     (if (getf options :host)
