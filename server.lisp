@@ -194,13 +194,13 @@
         (if (or (not (member :other-read (osicat:file-permissions path)))
                 (member (pathname-name path) *germinal-pathname-blacklist*
                         :test #'string-equal))
-            (list "51	Not Found" "") ;; In lieu of a permission-denied status
+            (list "51 Not Found" "") ;; In lieu of a permission-denied status
             (cond
               ((eq :directory path-kind) (gemini-serve-directory path))
               ((eq :regular-file path-kind) (gemini-serve-file path))
-              (t (list "51	Not Found" "")))))
-    (osicat-posix:enoent () (list "51	Not Found" ""))
-    (error () (list "40	Internal server error" "Internal server error"))))
+              (t (list "51 Not Found" "")))))
+    (osicat-posix:enoent () (list "51 Not Found" ""))
+    (error () (list "40 Internal server error" "Internal server error"))))
 
 (defun get-path-for-url (request)
   (str:concat *germinal-root* "/" (str:replace-all "../" "" (uri-path (uri request)))))
@@ -208,7 +208,7 @@
 (defun gemini-serve-file (path)
   "Given an accessible file path, serve it as a gemini response"
   (let* ((mime-type (mimes:mime path))
-         (status (str:concat "20	" mime-type))
+         (status (str:concat "20 " mime-type))
          (body (alexandria:read-file-into-byte-vector path)))
     (list status body)))
 
