@@ -169,22 +169,24 @@
 
 (defun gemini-handler (stream)
   "The main Gemini request handler. Sets up TLS and sets up request and response"
-  (let* ((cl+ssl::*ssl-global-context*
-           (make-context :disabled-protocols (list +ssl-op-no-sslv2+ +ssl-op-no-sslv3+
-                                                   +ssl-op-no-tlsv1+ +ssl-op-no-tlsv1-1+
-                                                   +ssl-op-no-tlsv1-2+)))
-         (tls-stream
-           (make-ssl-server-stream stream
-                                   :certificate *germinal-cert*
-                                   :key *germinal-cert-key*))
-         (request (read-line-crlf tls-stream))
-         (response (gemini-serve-file-or-directory request)))
-    (write-sequence
-     (babel:string-to-octets (str:concat (nth 0 response) '(#\return #\newline)))
-     tls-stream)
-    (force-output tls-stream)
-    (write-sequence (nth 1 response) tls-stream)
-    (force-output tls-stream)))
+  (handler-case
+      (let* ((cl+ssl::*ssl-global-context*
+               (make-context :disabled-protocols (list +ssl-op-no-sslv2+ +ssl-op-no-sslv3+
+                                                       +ssl-op-no-tlsv1+ +ssl-op-no-tlsv1-1+
+                                                       +ssl-op-no-tlsv1-2+)))
+             (tls-stream
+               (make-ssl-server-stream stream
+                                       :certificate *germinal-cert*
+                                       :key *germinal-cert-key*))
+             (request (read-line-crlf tls-stream))
+             (response (gemini-serve-file-or-directory request)))
+        (write-sequence
+         (babel:string-to-octets (str:concat (nth 0 response) '(#\return #\newline)))
+         tls-stream)
+        (force-output tls-stream)
+        (write-sequence (nth 1 response) tls-stream)
+        (force-output tls-stream))
+    (error (c) (format *error-output* "gemini-handler error: ~A~%" c))))
 
 (defun gemini-serve-file-or-directory (request)
   "Given a gemini request (string), try to respond by serving a file or directory listing."
