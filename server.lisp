@@ -19,6 +19,13 @@
 
 ;;; Package-level things
 (in-package :germinal)
+
+;;; Use system libraries
+(deploy:define-library cl+ssl::libssl
+  :dont-deploy t)
+(deploy:define-library osicat-posix::librt
+  :dont-deploy t)
+
 (interpol:enable-interpol-syntax)
 
 (defvar *germinal-server-name* "localhost")

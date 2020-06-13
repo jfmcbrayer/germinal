@@ -26,7 +26,9 @@
                (:file "server")
                )
   :description "A Gemini protocol server."
-  :build-operation "program-op"
   :build-pathname "germinal"
   :entry-point "germinal:start-cli"
+
+  :defsystem-depends-on (:deploy)
+  :build-operation "deploy-op"
   )
