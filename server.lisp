@@ -73,9 +73,10 @@
   (write-line #?"Listening on ${host} port ${port}")
   (force-output)
 
-  (with-global-context ((make-context :disabled-protocols (list +ssl-op-no-sslv2+ +ssl-op-no-sslv3+
-                                                                +ssl-op-no-tlsv1+ +ssl-op-no-tlsv1-1+
-                                                                +ssl-op-no-tlsv1-2+))
+  (with-global-context ((make-context :disabled-protocols
+                                      (list +ssl-op-no-sslv2+ +ssl-op-no-sslv3+
+                                            +ssl-op-no-tlsv1+ +ssl-op-no-tlsv1-1+
+                                            +ssl-op-no-tlsv1-2+))
                         :auto-free-p (not background))
      (usocket:socket-server host port #'gemini-handler ()
                            :multi-threading t
@@ -147,7 +148,8 @@
   (let* ((config (cl-toml:parse-file (get-config-file-path)))
          (core (gethash "core" config)))
     (when core
-      (when (gethash "server-name" core) (setq *germinal-server-name* (gethash "server-name" core)))
+      (when (gethash "server-name" core) (setq *germinal-server-name*
+                                               (gethash "server-name" core)))
       (when (gethash "root" core) (setq *germinal-root* (gethash "root" core)))
       (when (gethash "host" core) (setq *germinal-host*
                                         (gethash "host" core)))
