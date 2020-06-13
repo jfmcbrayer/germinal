@@ -72,10 +72,15 @@
   (setf (gethash "gmi" mimes:*mime-db*) "text/gemini")
   (write-line #?"Listening on ${host} port ${port}")
   (force-output)
-  (usocket:socket-server host port #'gemini-handler ()
-                         :multi-threading t
-                         :element-type '(unsigned-byte 8)
-                         :in-new-thread background))
+
+  (with-global-context ((make-context :disabled-protocols (list +ssl-op-no-sslv2+ +ssl-op-no-sslv3+
+                                                                +ssl-op-no-tlsv1+ +ssl-op-no-tlsv1-1+
+                                                                +ssl-op-no-tlsv1-2+))
+                        :auto-free-p (not background))
+     (usocket:socket-server host port #'gemini-handler ()
+                           :multi-threading t
+                           :element-type '(unsigned-byte 8)
+                           :in-new-thread background)))
 
 (defun start-cli ()
   "Start the germinal server, taking config from the environment or command-line."
@@ -170,14 +175,9 @@
 (defun gemini-handler (stream)
   "The main Gemini request handler. Sets up TLS and sets up request and response"
   (handler-case
-      (let* ((cl+ssl::*ssl-global-context*
-               (make-context :disabled-protocols (list +ssl-op-no-sslv2+ +ssl-op-no-sslv3+
-                                                       +ssl-op-no-tlsv1+ +ssl-op-no-tlsv1-1+
-                                                       +ssl-op-no-tlsv1-2+)))
-             (tls-stream
-               (make-ssl-server-stream stream
-                                       :certificate *germinal-cert*
-                                       :key *germinal-cert-key*))
+      (let* ((tls-stream (make-ssl-server-stream stream
+                                                 :certificate *germinal-cert*
+                                                 :key *germinal-cert-key*))
              (request (read-line-crlf tls-stream))
              (response (gemini-serve-file-or-directory request)))
         (write-sequence
