@@ -7,6 +7,12 @@ Type=simple
 Restart=always
 RestartSec=10
 User=nobody
+PrivateTmp=yes
+NoNewPrivileges=yes
+ProtectSystem=full
+ProtectHome=yes
+ProtectDevices=yes
+
 
 [Install]
 WantedBy=multi-user.target
