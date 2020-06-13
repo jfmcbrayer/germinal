@@ -76,7 +76,7 @@
   (with-global-context ((make-context :disabled-protocols (list +ssl-op-no-sslv2+ +ssl-op-no-sslv3+
                                                                 +ssl-op-no-tlsv1+ +ssl-op-no-tlsv1-1+
                                                                 +ssl-op-no-tlsv1-2+))
-                        :auto-free-p t)
+                        :auto-free-p (not background))
      (usocket:socket-server host port #'gemini-handler ()
                            :multi-threading t
                            :element-type '(unsigned-byte 8)
