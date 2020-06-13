@@ -207,7 +207,7 @@
     (error () (list "40 Internal server error" "Internal server error"))))
 
 (defun get-path-for-url (request)
-  (str:concat *germinal-root* "/" (str:replace-all "../" "" (uri-path (uri request)))))
+  (str:concat *germinal-root* "/" (str:replace-all ".." "" (uri-path (uri request)))))
 
 (defun gemini-serve-file (path)
   "Given an accessible file path, serve it as a gemini response"
