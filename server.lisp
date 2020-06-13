@@ -204,7 +204,7 @@
               ((eq :regular-file path-kind) (gemini-serve-file path))
               (t (list "51 Not Found" "")))))
     (osicat-posix:enoent () (list "51 Not Found" ""))
-    (error () (list "40 Internal server error" "Internal server error"))))
+    (error () (list "40 Internal server error" ""))))
 
 (defun get-path-for-url (request)
   (str:concat *germinal-root* "/" (str:replace-all ".." "" (uri-path (uri request)))))
