@@ -11,6 +11,9 @@
                 #:uri-path)
   (:import-from :cl-toml
                 #:parse-file)
+  (:import-from :ppath
+                #:normpath
+                #:join)
   (:export #:start
            #:start-cli))
 
@@ -197,7 +200,8 @@
              (path-kind (osicat:file-kind path :follow-symlinks t)))
         (if (or (not (member :other-read (osicat:file-permissions path)))
                 (member (pathname-name path) *germinal-pathname-blacklist*
-                        :test #'string-equal))
+                        :test #'string-equal)
+                (not (string-starts-with-p path *germinal-root*)))
             (list "51 Not Found" "") ;; In lieu of a permission-denied status
             (cond
               ((eq :directory path-kind) (gemini-serve-directory path))
@@ -207,7 +211,7 @@
     (error () (list "40 Internal server error" ""))))
 
 (defun get-path-for-url (request)
-  (str:concat *germinal-root* "/" (str:replace-all ".." "" (uri-path (uri request)))))
+  (normpath (join *germinal-root* (string-left-trim "/" (uri-path (uri request))))))
 
 (defun gemini-serve-file (path)
   "Given an accessible file path, serve it as a gemini response"
@@ -257,3 +261,8 @@ a gemini response"
 (defun de-prefix (path &optional (prefix *germinal-root*))
   "Strip *germinal-root* from a pathname"
   (str:replace-all prefix "" path))
+
+(defun string-starts-with-p (str1 str2)
+  "Determine whether `str1` starts with `str2`"
+  (let ((p (search str2 str1)))
+    (and p (= 0 p))))

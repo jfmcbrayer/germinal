@@ -15,6 +15,7 @@
                :cl+ssl
                :str
                :trivial-mimes
+               :ppath
                :osicat
                :cl-interpol
                :unix-opts
