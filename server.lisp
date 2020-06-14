@@ -8,7 +8,9 @@
                 #:uri
                 #:uri-scheme
                 #:uri-host
-                #:uri-path)
+                #:uri-path
+                #:url-encode
+                #:url-decode)
   (:import-from :cl-toml
                 #:parse-file)
   (:import-from :ppath
@@ -211,7 +213,8 @@
     (error () (list "40 Internal server error" ""))))
 
 (defun get-path-for-url (request)
-  (normpath (join *germinal-root* (string-left-trim "/" (uri-path (uri request))))))
+  (normpath (join *germinal-root*
+                  (string-left-trim "/" (url-decode (uri-path (uri request)))))))
 
 (defun gemini-serve-file (path)
   "Given an accessible file path, serve it as a gemini response"
@@ -252,11 +255,11 @@ a gemini response"
 
 (defun linkify (path &optional text)
   "Format a path name with optional description as a gemini link"
-  (let ((path-name (de-prefix(namestring path))))
+  (let* ((path-name (de-prefix(namestring path)))
+         (encoded-path-name (url-encode path-name)))
     (if text
-        #?"=> $(path-name)	$(text)"
-        #?"=> $(path-name)"
-        )))
+        #?"=> $(encoded-path-name)	$(text)"
+        #?"=> $(encoded-path-name)  $(path-name)")))
 
 (defun de-prefix (path &optional (prefix *germinal-root*))
   "Strip *germinal-root* from a pathname"
