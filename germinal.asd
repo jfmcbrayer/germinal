@@ -4,7 +4,7 @@
 (in-package :germinal-asd)
 
 (defsystem germinal
-  :version "0.1"
+  :version "0.2.0"
   :author "Jason McBrayer"
   :license "AGPL3"
   :depends-on (
