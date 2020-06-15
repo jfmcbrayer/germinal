@@ -30,8 +30,8 @@ that Germinal shares some sounds with Gemini.
 
    This is still a bit of a hack, and if you don't have a working Common Lisp
    development environment, you will probably have trouble getting it running.
-   You can build and install Germinal using SBCL with:
-   ~make && sudo make install~
+   The included ~build.sh~ will build a single executable, but unfortunately it
+   depends on a shared library that will be somewhere in your ~/.cache folder...  
 
    Germinal has been tested on SBCL and ECL. It runs fine on both, but I haven't
    been able to build a working binary distribution on ECL.
@@ -46,7 +46,7 @@ that Germinal shares some sounds with Gemini.
    will be run from. This will improve in the future when I write the
    configuration parts.  You can generate the cert like this:
 
-   ~openssl req -x509 -newkey rsa:4096 -keyout key.pem -out cert.pem -days 365 -nodes -subj '/CN=HOSTNAME'~
+   ~openssl req -x509 -newkey rsa:4096 -keyout key.pem -out cert.pem -days 365 -nodes~
 
 
 ** Usage

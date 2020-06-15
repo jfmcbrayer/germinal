@@ -13,8 +13,6 @@ ProtectSystem=full
 ProtectHome=yes
 ProtectDevices=yes
 
-SystemCallFilter=@system-service
-SystemCallErrorNumber=EPERM
 
 [Install]
 WantedBy=multi-user.target
