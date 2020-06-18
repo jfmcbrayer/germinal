@@ -15,6 +15,7 @@
                :cl+ssl
                :str
                :trivial-mimes
+               :trivial-file-size
                :ppath
                :osicat
                :cl-interpol
@@ -24,6 +25,7 @@
                )
   :components (
                (:file "server")
+               (:file "util")
                )
   :description "A Gemini protocol server."
   :build-operation "program-op"

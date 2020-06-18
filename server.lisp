@@ -3,7 +3,7 @@
 ;;; Preamble
 (in-package :cl-user)
 (defpackage :germinal
-  (:use :cl :cl+ssl)
+  (:use :cl :cl+ssl :trivial-file-size)
   (:import-from :quri
                 #:uri
                 #:uri-scheme
@@ -256,16 +256,10 @@ a gemini response"
 (defun linkify (path &optional text)
   "Format a path name with optional description as a gemini link"
   (let* ((path-name (de-prefix(namestring path)))
-         (encoded-path-name (url-encode path-name)))
+         (encoded-path-name (url-encode path-name))
+         (file-size (file-size-human-readable
+                     (file-size-in-octets path))))
     (if text
-        #?"=> $(encoded-path-name)	$(text)"
-        #?"=> $(encoded-path-name)  $(path-name)")))
+        #?"=> $(encoded-path-name)	$(text) ($(file-size))"
+        #?"=> $(encoded-path-name)  $(path-name) ($(file-size))")))
 
-(defun de-prefix (path &optional (prefix *germinal-root*))
-  "Strip *germinal-root* from a pathname"
-  (str:replace-all prefix "" path))
-
-(defun string-starts-with-p (str1 str2)
-  "Determine whether `str1` starts with `str2`"
-  (let ((p (search str2 str1)))
-    (and p (= 0 p))))
