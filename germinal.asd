@@ -23,7 +23,7 @@
                :quri
                :cl-toml
                )
-  :components (
+  :components ((:file "package")
                (:file "server")
                (:file "util")
                )
