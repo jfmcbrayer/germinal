@@ -51,6 +51,12 @@
    :long "key"
    :arg-parser #'identity))
 
+(define-condition gemini-error (error)
+  ((error-type :initarg :error-type
+               :reader gemini-error-type)
+   (error-message :initarg :error-message
+                  :reader gemini-error-message)))
+
 ;;; Entry functions
 
 (defun start (&key (host *germinal-host*) (port *germinal-port*) (background nil))
@@ -192,11 +198,15 @@
               ((eq :regular-file path-kind) (gemini-serve-file path))
               (t (list "51 Not Found" "")))))
     (osicat-posix:enoent () (list "51 Not Found" ""))
+    (gemini-error (err) (list #?"$((gemini-error-type err)) $((gemini-error-message err))" ""))
     (error () (list "40 Internal server error" ""))))
 
 (defun get-path-for-url (request)
-  (normpath (join *germinal-root*
-                  (string-left-trim "/" (url-decode (uri-path (uri request)))))))
+  (let ((request-uri (uri request)))
+    (if (uri-userinfo request-uri)
+        (error 'gemini-error :error-type 59 :error-message "Bad Request"))
+    (normpath (join *germinal-root*
+                    (string-left-trim "/" (url-decode (uri-path request-uri)))))))
 
 (defun gemini-serve-file (path)
   "Given an accessible file path, serve it as a gemini response"

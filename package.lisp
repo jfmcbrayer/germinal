@@ -7,6 +7,7 @@
                 #:uri-scheme
                 #:uri-host
                 #:uri-path
+                #:uri-userinfo
                 #:url-encode
                 #:url-decode)
   (:import-from :cl-toml
