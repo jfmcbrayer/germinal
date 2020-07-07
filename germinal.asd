@@ -26,6 +26,7 @@
   :components ((:file "package")
                (:file "server")
                (:file "util")
+               (:file "classes")
                )
   :description "A Gemini protocol server."
   :build-operation "program-op"

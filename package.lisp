@@ -16,4 +16,6 @@
                 #:normpath
                 #:join)
   (:export #:start
-           #:start-cli))
+           #:start-cli
+           #:make-request
+           #:make-response))
