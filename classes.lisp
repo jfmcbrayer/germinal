@@ -34,7 +34,9 @@
                   the-stream)
   (if (body the-response)
       (if (stringp (body the-response))
-          (let ((the-body (str:concat (body the-response) '(#\newline))))
+          (let ((the-body (if (str:ends-with-p #?"\n" (body the-response))
+                              (body the-response)
+                              #?"$((body the-response))\n")))
             (write-sequence (babel:string-to-octets the-body
                                                     :encoding :utf-8) the-stream))
       (write-sequence (body the-response) the-stream)))
