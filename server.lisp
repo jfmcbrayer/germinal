@@ -176,8 +176,7 @@
              (request (make-request (read-line-crlf tls-stream)))
              (response (gemini-serve-file-or-directory request)))
         (write-response response tls-stream))
-    ;; (error (c) (progn (break)(format *error-output* "gemini-handler error: ~A~%" c)))))
-    ))
+    (error (c) (format *error-output* "gemini-handler error: ~A~%" c))))
 
 (defun gemini-serve-file-or-directory (request)
   "Given a gemini request (string), try to respond by serving a file or directory listing."
@@ -196,8 +195,7 @@
     (osicat-posix:enoent () (make-response 51 "Not Found"))
     (gemini-error (err) (make-response (gemini-error-type err)
                                        (gemini-error-message err)))
-    ;;(error () (make-response 40 "Internal server error"))))
-    ))
+    (error () (make-response 40 "Internal server error"))))
 
 (defun get-path-for-url (url)
   (if (uri-userinfo url)
