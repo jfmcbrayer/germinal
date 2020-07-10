@@ -33,6 +33,10 @@
                                '(#\return #\newline)) :encoding :utf-8)
                   the-stream)
   (if (body the-response)
-      (write-sequence (body the-response) the-stream ))
+      (if (stringp (body the-response))
+          (let ((the-body (str:concat (body the-response) '(#\newline))))
+            (write-sequence (babel:string-to-octets the-body
+                                                    :encoding :utf-8) the-stream))
+      (write-sequence (body the-response) the-stream)))
   (force-output the-stream))
 

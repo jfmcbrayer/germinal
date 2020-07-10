@@ -15,6 +15,9 @@
   (:import-from :ppath
                 #:normpath
                 #:join)
+  (:import-from :cl-ppcre
+                #:scan
+                #:scan-to-strings)
   (:export #:start
            #:start-cli
            #:make-request

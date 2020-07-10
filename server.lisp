@@ -15,6 +15,14 @@
 
 (defvar *germinal-tls-context* nil "Variable used to store global TLS context")
 
+(defvar *germinal-routes*
+  `(("/hello/.*" . ,#'hello-world-view)
+    (".*" . ,#'gemini-serve-file-or-directory))
+  "Alist associating regular expressions to match paths against with functions
+  to call to handle them. Routes are matched in order, so put the most specific
+  routes at the top, and the least-specific at the bottom. Each function must
+  take a request object as its first argument and return a response object.")
+
 (opts:define-opts
   (:name :help
    :description "Print this help text"
@@ -167,6 +175,11 @@
          (return
            (if empty nil (get-output-stream-string s))))))
 
+(defun resolve-route (request)
+  (loop for route in *germinal-routes*
+        when (scan (car route) (uri-path (url request)))
+          return (cdr route)))
+
 (defun gemini-handler (stream)
   "The main Gemini request handler. Sets up TLS and sets up request and response"
   (handler-case
@@ -174,10 +187,13 @@
                                                  :certificate *germinal-cert*
                                                  :key *germinal-cert-key*))
              (request (make-request (read-line-crlf tls-stream)))
-             (response (gemini-serve-file-or-directory request)))
+             (response (funcall (resolve-route request) request)))
         (write-response response tls-stream)
         (close tls-stream))
     (error (c) (format *error-output* "gemini-handler error: ~A~%" c))))
+
+(defun hello-world-view (request)
+  (make-response 20 "text/plain" (str:concat "Hello, world!" '(#\newline))))
 
 (defun gemini-serve-file-or-directory (request)
   "Given a gemini request (string), try to respond by serving a file or directory listing."

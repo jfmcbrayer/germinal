@@ -22,6 +22,7 @@
                :unix-opts
                :quri
                :cl-toml
+               :cl-ppcre
                )
   :components ((:file "package")
                (:file "server")
