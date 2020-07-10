@@ -5,7 +5,7 @@
    (path-info :initarg :path-info :accessor path-info)
    (params :initarg :params :accessor params)
    (client-key :initarg :client-key :accessor client-key)
-   (client-address :initarg :cliient-address :accessor client-address)))
+   (client-address :initarg :client-address :accessor client-address)))
 
 (defclass response ()
   ((status :initarg :status :accessor status)
@@ -14,16 +14,25 @@
 
 (defun make-request (url &optional client-key client-address)
   (let* ((parsed-url (uri url))
-         (path-info (uri-path parsed-url))
-         (params (quri:uri-query-params parsed-url))
-         )
-    (make-instance 'request :url parsed-url :path-info path-info :params params
-                            :client-key client-key :client-address client-address)))
+         (params (quri:uri-query-params parsed-url)))
+    (if (not (uri-path parsed-url))
+        (setf (uri-path parsed-url) "/" ))
+    (make-instance 'request :url parsed-url :path-info (uri-path parsed-url)
+                            :params params
+                            :client-key client-key
+                            :client-address client-address)))
 
 (defun make-response (status meta &optional body)
   (make-instance 'response :status (write-to-string status) :meta meta :body body))
 
-(defmethod print-response ((stream stream) (response response))
+(defmethod write-response ((the-response response) (the-stream stream))
   (write-sequence (babel:string-to-octets
-                   (str:concat (status response) " " (meta response) '(#\return #\newline)))
-                  stream))
+                   (str:concat (status the-response)
+                               " "
+                               (meta the-response)
+                               '(#\return #\newline)) :encoding :utf-8)
+                  the-stream)
+  (if (body the-response)
+      (write-sequence (body the-response) the-stream ))
+  (force-output the-stream))
+

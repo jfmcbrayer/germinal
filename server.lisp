@@ -173,47 +173,43 @@
       (let* ((tls-stream (make-ssl-server-stream stream
                                                  :certificate *germinal-cert*
                                                  :key *germinal-cert-key*))
-             (request (read-line-crlf tls-stream))
+             (request (make-request (read-line-crlf tls-stream)))
              (response (gemini-serve-file-or-directory request)))
-        (write-sequence
-         (babel:string-to-octets (str:concat (nth 0 response) '(#\return #\newline)))
-         tls-stream)
-        (force-output tls-stream)
-        (write-sequence (nth 1 response) tls-stream)
-        (force-output tls-stream))
-    (error (c) (format *error-output* "gemini-handler error: ~A~%" c))))
+        (write-response response tls-stream))
+    ;; (error (c) (progn (break)(format *error-output* "gemini-handler error: ~A~%" c)))))
+    ))
 
 (defun gemini-serve-file-or-directory (request)
   "Given a gemini request (string), try to respond by serving a file or directory listing."
   (handler-case 
-      (let* ((path (get-path-for-url request))
+      (let* ((path (get-path-for-url (url request)))
              (path-kind (osicat:file-kind path :follow-symlinks t)))
         (if (or (not (member :other-read (osicat:file-permissions path)))
                 (member (pathname-name path) *germinal-pathname-blacklist*
                         :test #'string-equal)
                 (not (string-starts-with-p path *germinal-root*)))
-            (list "51 Not Found" "") ;; In lieu of a permission-denied status
+            (make-response 51 "Not Found") ;; In lieu of a permission-denied status
             (cond
               ((eq :directory path-kind) (gemini-serve-directory path))
               ((eq :regular-file path-kind) (gemini-serve-file path))
-              (t (list "51 Not Found" "")))))
-    (osicat-posix:enoent () (list "51 Not Found" ""))
-    (gemini-error (err) (list #?"$((gemini-error-type err)) $((gemini-error-message err))" ""))
-    (error () (list "40 Internal server error" ""))))
+              (t (make-response 51 "Not Found")))))
+    (osicat-posix:enoent () (make-response 51 "Not Found"))
+    (gemini-error (err) (make-response (gemini-error-type err)
+                                       (gemini-error-message err)))
+    ;;(error () (make-response 40 "Internal server error"))))
+    ))
 
-(defun get-path-for-url (request)
-  (let ((request-uri (uri request)))
-    (if (uri-userinfo request-uri)
+(defun get-path-for-url (url)
+  (if (uri-userinfo url)
         (error 'gemini-error :error-type 59 :error-message "Bad Request"))
     (normpath (join *germinal-root*
-                    (string-left-trim "/" (url-decode (uri-path request-uri)))))))
+                    (string-left-trim "/" (url-decode (uri-path url))))))
 
 (defun gemini-serve-file (path)
   "Given an accessible file path, serve it as a gemini response"
   (let* ((mime-type (mimes:mime path))
-         (status (str:concat "20 " mime-type))
          (body (alexandria:read-file-into-byte-vector path)))
-    (list status body)))
+    (make-response 20 mime-type body)))
 
 (defun gemini-serve-directory (path)
   "Given an accessible directory, serve either an index.gmi file or a directory listing as
@@ -228,7 +224,6 @@ a gemini response"
                               (uiop:subdirectories (str:concat path "/"))))
          (files (map 'list #'linkify
                      (uiop:directory-files (str:concat path "/"))))
-         (status "20	text/gemini")
          (body (make-string-output-stream)))
     (write-sequence #?"# Directory listing for ${(de-prefix path)}\n\n"
                     body)
@@ -242,8 +237,9 @@ a gemini response"
      (let ((cl-interpol:*list-delimiter* #\Newline))
        #?"@{files}\n\n")
      body)
-    (list status (babel:string-to-octets (get-output-stream-string body)
-                                         :encoding :utf-8))))
+    (make-response 20 "text/gemini"
+                   (babel:string-to-octets (get-output-stream-string body)
+                                           :encoding :utf-8))))
 
 (defun linkify (path &optional text)
   "Format a path name with optional description as a gemini link"
