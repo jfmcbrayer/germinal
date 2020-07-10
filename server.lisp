@@ -175,7 +175,8 @@
                                                  :key *germinal-cert-key*))
              (request (make-request (read-line-crlf tls-stream)))
              (response (gemini-serve-file-or-directory request)))
-        (write-response response tls-stream))
+        (write-response response tls-stream)
+        (close tls-stream))
     (error (c) (format *error-output* "gemini-handler error: ~A~%" c))))
 
 (defun gemini-serve-file-or-directory (request)
