@@ -16,8 +16,8 @@
 (defvar *germinal-tls-context* nil "Variable used to store global TLS context")
 
 (defvar *germinal-routes*
-  '(("/hello/.*" . germinal::hello-world-view)
-    (".*" . germinal::gemini-serve-file-or-directory))
+  '(("/hello/?.*" . hello-world-view)
+    (".*" . gemini-serve-file-or-directory))
   "Alist associating regular expressions to match paths against with functions
   to call to handle them. Routes are matched in order, so put the most specific
   routes at the top, and the least-specific at the bottom. Each function must
@@ -137,7 +137,7 @@
 
 (defun get-config-file-path ()
   "Use command-line, environment, or default to find config file"
-  (let ((env-config (osicat:environment-variable "GERMINAL_CONFiG"))
+  (let ((env-config (osicat:environment-variable "GERMINAL_CONFIG"))
         (opts-config (handler-case
                          (getf (opts:get-opts) :config)
                        (error () nil))))
@@ -178,6 +178,8 @@
            (if empty nil (get-output-stream-string s))))))
 
 (defun resolve-route (request)
+  "Take a request object as argument, and return the function for handling the
+route."
   (loop for route in *germinal-routes*
         when (scan (car route) (uri-path (url request)))
           return (symbol-function(cdr route))))
@@ -195,7 +197,8 @@
     (error (c) (format *error-output* "gemini-handler error: ~A~%" c))))
 
 (defun hello-world-view (request)
-  (make-response 20 "text/plain" (str:concat "Hello, world!" '(#\newline))))
+  "A `Hello World' view function."
+  (make-response 20 "text/plain" (str:concat "# Hello, world!" '(#\newline))))
 
 (defun gemini-serve-file-or-directory (request)
   "Given a gemini request (string), try to respond by serving a file or directory listing."
@@ -217,6 +220,7 @@
     (error () (make-response 40 "Internal server error"))))
 
 (defun get-path-for-url (url)
+  "Get file path based on URL (a quri object)"
   (if (uri-userinfo url)
         (error 'gemini-error :error-type 59 :error-message "Bad Request"))
     (normpath (join *germinal-root*
