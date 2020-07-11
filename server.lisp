@@ -16,12 +16,14 @@
 (defvar *germinal-tls-context* nil "Variable used to store global TLS context")
 
 (defvar *germinal-routes*
-  `(("/hello/.*" . ,#'hello-world-view)
-    (".*" . ,#'gemini-serve-file-or-directory))
+  '(("/hello/.*" . germinal::hello-world-view)
+    (".*" . germinal::gemini-serve-file-or-directory))
   "Alist associating regular expressions to match paths against with functions
   to call to handle them. Routes are matched in order, so put the most specific
   routes at the top, and the least-specific at the bottom. Each function must
-  take a request object as its first argument and return a response object.")
+  take a request object as its first argument and return a response object. Make
+  sure you refer to the function in such a way that it can be found from the
+  package you call `germinal-start' from.")
 
 (opts:define-opts
   (:name :help
@@ -178,7 +180,7 @@
 (defun resolve-route (request)
   (loop for route in *germinal-routes*
         when (scan (car route) (uri-path (url request)))
-          return (cdr route)))
+          return (symbol-function(cdr route))))
 
 (defun gemini-handler (stream)
   "The main Gemini request handler. Sets up TLS and sets up request and response"
