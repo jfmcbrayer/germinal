@@ -16,7 +16,8 @@
 (defvar *germinal-tls-context* nil "Variable used to store global TLS context")
 
 (defvar *germinal-routes*
-  '(("/hello/?.*" . hello-world-view)
+  '(("/hello/?" . hello-world-view)
+    ("/hello/(.*)/?" . hello-world-view)
     (".*" . gemini-serve-file-or-directory))
   "Alist associating regular expressions to match paths against with functions
   to call to handle them. Routes are matched in order, so put the most specific
