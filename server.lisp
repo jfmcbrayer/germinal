@@ -16,8 +16,8 @@
 (defvar *germinal-tls-context* nil "Variable used to store global TLS context")
 
 (defvar *germinal-routes*
-  '(("/hello/?" . hello-world-view)
-    ("/hello/(.*)/?" . hello-world-view)
+  '(("/hello/(.*)/?" . hello-world-view)
+    ("/hello/?" . hello-world-view)
     (".*" . gemini-serve-file-or-directory))
   "Alist associating regular expressions to match paths against with functions
   to call to handle them. Routes are matched in order, so put the most specific
@@ -185,6 +185,20 @@ route."
         when (scan (car route) (uri-path (url request)))
           return (symbol-function(cdr route))))
 
+(defun serve-route (request)
+  "Take a request object as argument, and apply the function for handling the
+route to the request and any positional args from the route."
+  (loop for route in *germinal-routes*
+        when (scan (car route) (uri-path (url request)))
+          return (apply (symbol-function(cdr route))
+                        request
+                        (route-args route request))))
+
+(defun route-args (route request)
+  (vector-to-list (nth 1 (multiple-value-list
+                          (scan-to-strings (car route)
+                                           (uri-path (url request)))))))
+
 (defun gemini-handler (stream)
   "The main Gemini request handler. Sets up TLS and sets up request and response"
   (handler-case
@@ -192,16 +206,17 @@ route."
                                                  :certificate *germinal-cert*
                                                  :key *germinal-cert-key*))
              (request (make-request (read-line-crlf tls-stream)))
-             (response (funcall (resolve-route request) request)))
+             (response (serve-route request)))
         (write-response response tls-stream)
         (close tls-stream))
     (error (c) (format *error-output* "gemini-handler error: ~A~%" c))))
 
-(defun hello-world-view (request)
+(defun hello-world-view (request &optional name &rest junk)
   "A `Hello World' view function."
-  (make-response 20 "text/plain" (str:concat "# Hello, world!" '(#\newline))))
+  (let ((name (if (str:emptyp name) "World" name)))
+    (make-response 20 "text/plain" (str:concat #?"# Hello, $(name)!" '(#\newline)))))
 
-(defun gemini-serve-file-or-directory (request)
+(defun gemini-serve-file-or-directory (request &rest junk)
   "Given a gemini request (string), try to respond by serving a file or directory listing."
   (handler-case 
       (let* ((path (get-path-for-url (url request)))
@@ -209,7 +224,7 @@ route."
         (if (or (not (member :other-read (osicat:file-permissions path)))
                 (member (pathname-name path) *germinal-pathname-blacklist*
                         :test #'string-equal)
-                (not (string-starts-with-p path *germinal-root*)))
+                (not (str:starts-with-p *germinal-root* path)))
             (make-response 51 "Not Found") ;; In lieu of a permission-denied status
             (cond
               ((eq :directory path-kind) (gemini-serve-directory path))
