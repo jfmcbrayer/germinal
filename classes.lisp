@@ -1,4 +1,5 @@
 (in-package :germinal)
+(interpol:enable-interpol-syntax)
 
 (defclass request ()
   ((url :initarg :url :accessor url)
