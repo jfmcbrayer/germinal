@@ -6,10 +6,9 @@
   "Strip *germinal-root* from a pathname"
   (str:replace-all prefix "" path))
 
-(defun string-starts-with-p (str1 str2)
-  "Determine whether `str1` starts with `str2`"
-  (let ((p (search str2 str1)))
-    (and p (= 0 p))))
+(defun vector-to-list (the-vector)
+  (loop for i below (array-dimension the-vector 0)
+        collect (aref the-vector i)))
 
 ;; From Reddit /u/ambrevar
 ;; https://www.reddit.com/r/lisp/comments/c3nfzo/humanreadable_file_size_in_lisp/
