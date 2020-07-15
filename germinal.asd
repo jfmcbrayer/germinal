@@ -15,7 +15,6 @@
                :cl+ssl
                :str
                :trivial-mimes
-               :trivial-file-size
                :ppath
                :osicat
                :cl-interpol

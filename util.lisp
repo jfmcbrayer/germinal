@@ -10,6 +10,9 @@
   (loop for i below (array-dimension the-vector 0)
         collect (aref the-vector i)))
 
+(defun file-size-in-octets (path)
+  (osicat-posix:stat-size (osicat-posix:stat path)))
+
 ;; From Reddit /u/ambrevar
 ;; https://www.reddit.com/r/lisp/comments/c3nfzo/humanreadable_file_size_in_lisp/
 ;; This is mostly inspired by Emacs 26.2.

@@ -1,7 +1,7 @@
 ;;; Preamble
 (in-package :cl-user)
 (defpackage :germinal
-  (:use :cl :cl+ssl :trivial-file-size)
+  (:use :cl :cl+ssl)
   (:import-from :quri
                 #:uri
                 #:uri-scheme
