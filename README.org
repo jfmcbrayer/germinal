@@ -54,6 +54,8 @@ that Germinal shares some sounds with Gemini.
 
 *** From Lisp
 
+    Preferably, install [[https://www.cliki.net/CL-Launch][CL-Launch]].
+
     Make a startup script based on sample-runner.lisp. (FIXME)
 
 ** Usage
