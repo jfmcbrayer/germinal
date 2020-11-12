@@ -77,10 +77,11 @@
   (setf (gethash "gmi" mimes:*mime-db*) "text/gemini")
   (write-line #?"Listening on ${host} port ${port}")
   (force-output)
-  (setq *germinal-tls-context* (make-context :disabled-protocols
-                                              (list +ssl-op-no-sslv2+ +ssl-op-no-sslv3+
-                                                    +ssl-op-no-tlsv1+ +ssl-op-no-tlsv1-1+
-                                                    +ssl-op-no-tlsv1-2+)))
+  (setq *germinal-tls-context*
+        (make-context :disabled-protocols
+                      (list +ssl-op-no-sslv2+ +ssl-op-no-sslv3+
+                            +ssl-op-no-tlsv1+ +ssl-op-no-tlsv1-1+
+                            +ssl-op-no-tlsv1-2+)))
   (with-global-context (*germinal-tls-context* :auto-free-p (not background))
      (usocket:socket-server host port #'gemini-handler ()
                            :multi-threading t
