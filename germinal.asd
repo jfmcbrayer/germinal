@@ -8,6 +8,7 @@
   :author "Jason McBrayer"
   :license "AGPL3"
   :depends-on (
+               :alexandria
                :babel
                :usocket
                :usocket-server
