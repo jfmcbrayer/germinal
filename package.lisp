@@ -21,4 +21,11 @@
   (:export #:start
            #:start-cli
            #:make-request
-           #:make-response))
+           #:make-response
+           #:*germinal-server-name*
+           #:*germinal-root*
+           #:*germinal-host*
+           #:*germinal-port*
+           #:*germinal-cert*
+           #:*germinal-pathname-blacklist*
+           #:*germinal-routes*))
