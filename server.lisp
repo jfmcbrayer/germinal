@@ -150,20 +150,21 @@
 
 (defun get-config-file ()
   "Set config vars based on contents of config file"
-  (let* ((config (cl-toml:parse-file (get-config-file-path)))
-         (core (gethash "core" config)))
-    (when core
-      (when (gethash "server-name" core) (setq *germinal-server-name*
-                                               (gethash "server-name" core)))
-      (when (gethash "root" core) (setq *germinal-root* (gethash "root" core)))
-      (when (gethash "host" core) (setq *germinal-host*
-                                        (gethash "host" core)))
-      (when (gethash "port" core) (setq *germinal-port* (gethash "port" core)))
-      (when (gethash "cert" core) (setq *germinal-cert*
-                                        (gethash "cert" core)))
-      (when (gethash "key" core) (setq *germinal-cert-key*
-                                        (gethash "key" core))))
-    config))
+  (when (probe-file (get-config-file-path))
+    (let* ((config (cl-toml:parse-file (get-config-file-path)))
+           (core (gethash "core" config)))
+      (when core
+        (when (gethash "server-name" core) (setq *germinal-server-name*
+                                                 (gethash "server-name" core)))
+        (when (gethash "root" core) (setq *germinal-root* (gethash "root" core)))
+        (when (gethash "host" core) (setq *germinal-host*
+                                          (gethash "host" core)))
+        (when (gethash "port" core) (setq *germinal-port* (gethash "port" core)))
+        (when (gethash "cert" core) (setq *germinal-cert*
+                                          (gethash "cert" core)))
+        (when (gethash "key" core) (setq *germinal-cert-key*
+                                         (gethash "key" core))))
+      config)))
 
 (defun read-line-crlf (stream &optional eof-error-p)
   "Read a CRLF-terminated line from a binary stream and return a string"
