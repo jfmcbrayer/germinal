@@ -235,7 +235,9 @@ route to the request and any positional args from the route."
     (osicat-posix:enoent () (make-response 51 "Not Found"))
     (gemini-error (err) (make-response (gemini-error-type err)
                                        (gemini-error-message err)))
-    (error () (make-response 40 "Internal server error"))))
+    (error (c)
+      (format *error-output* "gemini-serve-file-or-directory error: ~A~%" c)
+      (make-response 40 "Internal server error"))))
 
 (defun get-path-for-url (url)
   "Get file path based on URL (a quri object)"
