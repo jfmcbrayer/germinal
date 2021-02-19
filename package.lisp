@@ -22,6 +22,7 @@
            #:start-cli
            #:make-request
            #:make-response
+           #:gemini-serve-file-or-directory
            #:*germinal-server-name*
            #:*germinal-root*
            #:*germinal-host*
