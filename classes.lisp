@@ -31,7 +31,7 @@
                    (str:concat (status the-response)
                                " "
                                (meta the-response)
-                               '(#\return #\newline)) :encoding :utf-8)
+                               (coerce '(#\return #\newline) 'string)) :encoding :utf-8)
                   the-stream)
   (if (body the-response)
       (if (stringp (body the-response))

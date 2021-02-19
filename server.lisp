@@ -215,7 +215,7 @@ route to the request and any positional args from the route."
 (defun hello-world-view (request &optional name &rest junk)
   "A `Hello World' view function."
   (let ((name (if (str:emptyp name) "World" name)))
-    (make-response 20 "text/plain" (str:concat #?"# Hello, $(name)!" '(#\newline)))))
+    (make-response 20 "text/gemini" (str:concat #?"# Hello, $(name)!" (string #\Newline)))))
 
 (defun gemini-serve-file-or-directory (request &rest junk)
   "Given a gemini request (string), try to respond by serving a file or directory listing."
