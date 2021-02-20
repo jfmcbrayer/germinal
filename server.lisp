@@ -12,6 +12,7 @@
 (defvar *germinal-cert-key* "/etc/germinal/key.pem")
 (defvar *germinal-config-file* "/etc/germinal/config.toml")
 (defvar *germinal-pathname-blacklist* '(".git" ".git/"))
+(defvar *germinal-middleware* '(basic-logging))
 
 (defvar *germinal-tls-context* nil "Variable used to store global TLS context")
 
@@ -208,7 +209,7 @@ route to the request and any positional args from the route."
                                                  :certificate *germinal-cert*
                                                  :key *germinal-cert-key*))
              (request (make-request (read-line-crlf tls-stream)))
-             (response (serve-route request)))
+             (response (funcall (middleware-chain *germinal-middleware*) request)))
         (write-response response tls-stream)
         (close tls-stream))
     (error (c) (format *error-output* "gemini-handler error: ~A~%" c))))

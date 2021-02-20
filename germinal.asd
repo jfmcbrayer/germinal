@@ -23,9 +23,11 @@
                :quri
                :cl-toml
                :cl-ppcre
+               :local-time
                )
   :components ((:file "package")
                (:file "server")
+               (:file "middleware")
                (:file "util")
                (:file "classes")
                )

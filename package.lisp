@@ -29,4 +29,5 @@
            #:*germinal-port*
            #:*germinal-cert*
            #:*germinal-pathname-blacklist*
-           #:*germinal-routes*))
+           #:*germinal-routes*
+           #:*germinal-middleware*))
