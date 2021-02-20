@@ -280,10 +280,23 @@ a gemini response"
                    (babel:string-to-octets (get-output-stream-string body)
                                            :encoding :utf-8))))
 
+(defun url-encode-path (path)
+  "Url-encode a path, leaving slashes intact."
+  (let* ((dir-parts (pathname-directory path))
+         (abs-or-rel (car dir-parts))
+         (path-components (append
+                           (cdr dir-parts)
+                           (list (file-namestring path))))
+         (url-encoded-path-components (mapcar #'url-encode path-components))
+         (encoded-path (str:join "/" url-encoded-path-components)))
+    (if (eq :absolute abs-or-rel)
+        (str:concat "/" encoded-path)
+        encoded-path)))
+
 (defun linkify (path &optional text)
   "Format a path name with optional description as a gemini link"
-  (let* ((path-name (de-prefix(namestring path)))
-         (encoded-path-name (url-encode path-name))
+  (let* ((path-name (de-prefix (namestring path)))
+         (encoded-path-name (url-encode-path path-name))
          (file-size (file-size-human-readable
                      (file-size-in-octets path))))
     (if text
