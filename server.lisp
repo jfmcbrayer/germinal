@@ -224,8 +224,7 @@ route to the request and any positional args from the route."
       (let* ((path (get-path-for-url (url request)))
              (path-kind (osicat:file-kind path :follow-symlinks t)))
         (if (or (not (member :other-read (osicat:file-permissions path)))
-                (member (pathname-name path) *germinal-pathname-blacklist*
-                        :test #'string-equal)
+                (member path (map 'list #'namestring *germinal-pathname-blacklist*))
                 (not (str:starts-with-p *germinal-root* path)))
             (make-response 51 "Not Found") ;; In lieu of a permission-denied status
             (cond
