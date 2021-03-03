@@ -265,7 +265,7 @@ a gemini response"
          (files (map 'list #'linkify
                      (uiop:directory-files (str:concat path "/"))))
          (body (make-string-output-stream)))
-    (write-sequence #?"# Directory listing for ${(de-prefix path)}\n\n"
+    (write-sequence #?"# Directory listing for ${(de-prefix path)}/\n\n"
                     body)
     (write-sequence #?"## Subdirectories\n" body)
     (write-sequence
