@@ -260,7 +260,9 @@ a gemini response"
 (defun gemini-generate-directory-list (path)
   "Given an accessible directory path, generate a directory listing and serve it as a gemini response"
   (let* ((subdirectories (map 'list #'linkify
-                              (uiop:subdirectories (str:concat path "/"))))
+                              (set-difference
+                               (uiop:subdirectories (str:concat path "/"))
+                               *germinal-pathname-blacklist* :test #'equalp)))
          (files (map 'list #'linkify
                      (uiop:directory-files (str:concat path "/"))))
          (body (make-string-output-stream)))
