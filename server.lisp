@@ -11,7 +11,10 @@
 (defvar *germinal-cert* "/etc/germinal/cert.pem")
 (defvar *germinal-cert-key* "/etc/germinal/key.pem")
 (defvar *germinal-config-file* "/etc/germinal/config.toml")
-(defvar *germinal-pathname-blacklist* '(".git" ".git/"))
+(defvar *germinal-pathname-blacklist* '(".git")
+  "List of files and directories to exclude. 
+   Relative files/directories are excluded in all subdirectories of *germinal-root*.
+   Absolute paths are excluded at exactly this path.")
 
 (defvar *germinal-tls-context* nil "Variable used to store global TLS context")
 
@@ -218,13 +221,24 @@ route to the request and any positional args from the route."
   (let ((name (if (str:emptyp name) "World" name)))
     (make-response 20 "text/gemini" (str:concat #?"# Hello, $(name)!" (string #\Newline)))))
 
+(defun get-blacklist (path &optional (blacklist *germinal-pathname-blacklist*))
+  "Compiles list of blacklisted pathnames for path"
+  (loop for path in (map 'list (lambda (p) (cl-fad:merge-pathnames-as-file
+                                (cl-fad:pathname-as-directory path)
+                                p))
+                         blacklist)
+        collect (if (cl-fad:directory-exists-p path)
+                    (cl-fad:pathname-as-directory path)
+                    path)))
+
 (defun gemini-serve-file-or-directory (request &rest junk)
   "Given a gemini request (string), try to respond by serving a file or directory listing."
+  (declare (ignore junk))
   (handler-case 
       (let* ((path (get-path-for-url (url request)))
              (path-kind (osicat:file-kind path :follow-symlinks t)))
         (if (or (not (member :other-read (osicat:file-permissions path)))
-                (member path (map 'list #'namestring *germinal-pathname-blacklist*))
+                (member (pathname path) (get-blacklist path))
                 (not (str:starts-with-p *germinal-root* path)))
             (make-response 51 "Not Found") ;; In lieu of a permission-denied status
             (cond
@@ -260,10 +274,12 @@ a gemini response"
   "Given an accessible directory path, generate a directory listing and serve it as a gemini response"
   (let* ((subdirectories (map 'list #'linkify
                               (set-difference
-                               (uiop:subdirectories (str:concat path "/"))
-                               *germinal-pathname-blacklist* :test #'equalp)))
+                               (remove-if-not #'cl-fad:directory-exists-p (cl-fad:list-directory path))
+                               (get-blacklist path) :test #'equal)))
          (files (map 'list #'linkify
-                     (uiop:directory-files (str:concat path "/"))))
+                     (set-difference
+                      (remove-if #'cl-fad:directory-exists-p (cl-fad:list-directory path))
+                      (get-blacklist path) :test #'equal)))
          (body (make-string-output-stream)))
     (write-sequence #?"# Directory listing for ${(de-prefix path)}/\n\n"
                     body)

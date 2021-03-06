@@ -23,6 +23,7 @@
                :quri
                :cl-toml
                :cl-ppcre
+               :cl-fad
                )
   :components ((:file "package")
                (:file "server")
