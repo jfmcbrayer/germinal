@@ -217,7 +217,7 @@ route to the request and any positional args from the route."
                                                  :certificate *germinal-cert*
                                                  :key *germinal-cert-key*))
              (request (make-request (read-line-crlf tls-stream)
-                                    nil
+                                    (cl+ssl:ssl-stream-x509-certificate tls-stream)
                                     usocket:*remote-host*))
              (response (serve-route-with-middleware request)))
         (write-response response tls-stream)
