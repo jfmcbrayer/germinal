@@ -205,6 +205,11 @@ route to the request and any positional args from the route."
                           (scan-to-strings (car route)
                                            (uri-path (url request)))))))
 
+(defun serve-route-with-middleware (request)
+  "Take a request object as argument, and apply the chain of handlers in
+*germinal-middleware* in order, with serve-route as the last handler."
+  (funcall (middleware-chain *germinal-middleware*) request))
+
 (defun gemini-handler (stream)
   "The main Gemini request handler. Sets up TLS and sets up request and response"
   (handler-case
@@ -212,7 +217,7 @@ route to the request and any positional args from the route."
                                                  :certificate *germinal-cert*
                                                  :key *germinal-cert-key*))
              (request (make-request (read-line-crlf tls-stream)))
-             (response (funcall (middleware-chain *germinal-middleware*) request)))
+             (response (serve-route-with-middleware request)))
         (write-response response tls-stream)
         (close tls-stream))
     (error (c) (format *error-output* "gemini-handler error: ~A~%" c))))
