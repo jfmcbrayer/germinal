@@ -2,16 +2,15 @@
 Description=Germinal, a gemini server
 
 [Service]
-ExecStart=/usr/local/bin/germinal
+ExecStart=/usr/local/share/germinal/germinal.ros
 Type=simple
 Restart=always
 RestartSec=10
-User=nobody
+User=germinal
 PrivateTmp=yes
 NoNewPrivileges=yes
-ProtectSystem=full
+ProtectSystem=strict
 ProtectHome=yes
-ProtectDevices=yes
 
 
 [Install]
