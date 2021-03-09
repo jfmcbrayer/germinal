@@ -6,8 +6,9 @@
     (let ((response (funcall handler request)))
       (format
        *standard-output*
-       "[~A] \"~A\" ~A ~A ~%"
+       "[~A] ~A \"~A\" ~A ~A ~%"
        (local-time:now)
+       (usocket:host-to-hostname (client-address request))
        (path-info request)
        (status response)
        (meta response))
