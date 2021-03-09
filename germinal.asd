@@ -24,9 +24,11 @@
                :cl-toml
                :cl-ppcre
                :cl-fad
+               :local-time
                )
   :components ((:file "package")
                (:file "server")
+               (:file "middleware")
                (:file "util")
                (:file "classes")
                )

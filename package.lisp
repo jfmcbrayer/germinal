@@ -30,4 +30,5 @@
            #:*germinal-cert*
            #:*germinal-cert-key*
            #:*germinal-pathname-blacklist*
-           #:*germinal-routes*))
+           #:*germinal-routes*
+           #:*germinal-middleware*))
