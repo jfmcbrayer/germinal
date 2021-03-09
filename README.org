@@ -36,7 +36,7 @@ people. And it happened that Germinal shares some sounds with Gemini.
 
     1. Install [[https://github.com/roswell/roswell/wiki/Installation][Roswell]].
     2. Put the Germinal sources in a folder that Common Lisp knows about;
-       usually, either ~\~/common-lisp/~, or ~\~/.roswell/local-projects/~.
+       usually, either ~~/common-lisp/~, or ~~/.roswell/local-projects/~.
        You can just put a symbolic link to the folder containing the sources
        into either of those directories.
     3. Edit ~germinal.ros~, setting the configuration variables to what's
