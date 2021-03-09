@@ -78,7 +78,7 @@
   ;; update mime types
   (setf (gethash "org" mimes:*mime-db*) "text/org-mode")
   (setf (gethash "gmi" mimes:*mime-db*) "text/gemini")
-  (write-line #?"Listening on ${host} port ${port}")
+  (write-line #?";; Germinal listening on ${host} port ${port}")
   (force-output)
   (setq *germinal-tls-context*
         (make-context :disabled-protocols

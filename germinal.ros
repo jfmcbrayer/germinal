@@ -1,0 +1,55 @@
+#!/bin/sh
+#|-*- mode:common-lisp -*-|#
+#|
+exec ros -Q -- $0 "$@"
+|#
+(progn ;;init forms
+  (ros:ensure-asdf)
+  #+quicklisp(ql:quickload '(germinal swank) :silent t)
+  )
+
+(defpackage :ros.script.germinal
+  (:use :cl))
+(in-package :ros.script.germinal)
+
+(declaim (optimize (debug 3)))
+(defvar *germinal-server* nil)
+(defvar *germinal-server-thread* nil)
+(defvar *swank-server* nil)
+
+(setf germinal:*germinal-server-name* "localhost"
+      germinal:*germinal-cert* "localhost.crt"
+      germinal:*germinal-cert-key* "localhost.key"
+      germinal:*germinal-root* "/home/jmcbray/Documents/var-gemini"
+      germinal:*germinal-pathname-blacklist* '(".git" "dont-read-me"))
+
+;; Set default content type for files without a file extension
+(setf (gethash nil mimes:*mime-db*) "text/gemini")
+
+(setf germinal:*germinal-routes*
+      '((".*" . germinal:gemini-serve-file-or-directory)))
+
+(defun start-server ()
+  (setf *swank-server* (swank:create-server :port 4006 :dont-close t))
+  (multiple-value-setq (*germinal-server-thread* *germinal-server*)
+    (germinal:start :background t)))
+
+(defun stop-server ()
+  (when (and *germinal-server-thread*
+             (bt:thread-alive-p *germinal-server-thread*))
+    (bt:destroy-thread *germinal-server-thread*)
+    (swank:stop-server *swank-server*)
+    (setf *germinal-server* nil)
+    (setf *germinal-server-thread* nil)
+    (setf *swank-server* nil)))
+
+(defun restart-server ()
+  (stop-server)
+  (start-server))
+
+(defun main (&rest argv)
+  (declare (ignorable argv))
+  (start-server)
+  (loop do
+        (sleep 10)))
+;;; vim: set ft=lisp lisp:
