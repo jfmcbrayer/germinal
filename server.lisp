@@ -221,15 +221,12 @@ route to the request and any positional args from the route."
   (let ((name (if (str:emptyp name) "World" name)))
     (make-response 20 "text/gemini" (str:concat #?"# Hello, $(name)!" (string #\Newline)))))
 
-(defun get-blacklist (path &optional (blacklist *germinal-pathname-blacklist*))
-  "Compiles list of blacklisted pathnames for path"
-  (loop for path in (map 'list (lambda (p) (cl-fad:merge-pathnames-as-file
-                                (cl-fad:pathname-as-directory path)
-                                p))
-                         blacklist)
-        collect (if (cl-fad:directory-exists-p path)
-                    (cl-fad:pathname-as-directory path)
-                    path)))
+(defun path-blacklisted-p (path &optional (blacklist *germinal-pathname-blacklist*))
+  "Return t if the path matches something in the pathname blacklist."
+   (loop for pattern in blacklist
+         when (pathname-match-p (cl-fad:merge-pathnames-as-file path)
+                                pattern)
+           return t))
 
 (defun gemini-serve-file-or-directory (request &rest junk)
   "Given a gemini request (string), try to respond by serving a file or directory listing."
@@ -238,7 +235,7 @@ route to the request and any positional args from the route."
       (let* ((path (get-path-for-url (url request)))
              (path-kind (osicat:file-kind path :follow-symlinks t)))
         (if (or (not (member :other-read (osicat:file-permissions path)))
-                (member (pathname path) (get-blacklist path))
+                (path-blacklisted-p path)
                 (not (str:starts-with-p *germinal-root* path)))
             (make-response 51 "Not Found") ;; In lieu of a permission-denied status
             (cond
@@ -273,13 +270,14 @@ a gemini response"
 (defun gemini-generate-directory-list (path)
   "Given an accessible directory path, generate a directory listing and serve it as a gemini response"
   (let* ((subdirectories (map 'list #'linkify
-                              (set-difference
-                               (remove-if-not #'cl-fad:directory-exists-p (cl-fad:list-directory path))
-                               (get-blacklist path) :test #'equal)))
+                              (remove-if #'path-blacklisted-p 
+                                         (remove-if-not #'cl-fad:directory-exists-p
+                                                        (cl-fad:list-directory path)))))
          (files (map 'list #'linkify
-                     (set-difference
-                      (remove-if #'cl-fad:directory-exists-p (cl-fad:list-directory path))
-                      (get-blacklist path) :test #'equal)))
+                     (remove-if #'path-blacklisted-p 
+                                (remove-if #'cl-fad:directory-exists-p
+                                           (cl-fad:list-directory path)))
+                      ))
          (body (make-string-output-stream)))
     (write-sequence #?"# Directory listing for ${(de-prefix path)}/\n\n"
                     body)
