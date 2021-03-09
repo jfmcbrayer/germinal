@@ -2,28 +2,29 @@
 
 Germinal is a server for the [[gopher://zaibatsu.circumlunar.space/1/~solderpunk/gemini][Gemini Protocol]], written in Common Lisp.
 
-It is named after the early 20th century Yiddish-language anarchist newspaper
-[[https://en.wikipedia.org/wiki/Germinal_(journal)][Germinal]]. I wanted to name it after an anarchist publication to convey the idea
-of people sharing information and ideas with each other, in contrast to the way
-the web is used to push advertising from corporations to people. And it happened
-that Germinal shares some sounds with Gemini.
+It is named after the early 20th century Yiddish-language anarchist
+newspaper [[https://en.wikipedia.org/wiki/Germinal_(journal)][Germinal]]. I wanted to name it after an anarchist publication to
+convey the idea of people sharing information and ideas with each other, in
+contrast to the way the web is used to push advertising from corporations to
+people. And it happened that Germinal shares some sounds with Gemini.
 
 ** Features
 
 *** Current
     - Serves any type of document with an appropriate mime type.
     - Serves .gmi files as text/gemini, the gemini mapfile format.
-    - Serves index.gml as a directory listing, if it exists
+    - Serves index.gmi as a directory listing, if it exists
     - Serves a simple directory listing for directories without index.gml
     - Serves only world-readable content, much like [[http://www.gophernicus.org/][Gophernicus]].
-    - Basic onfiguration by environment variables, command-line, or TOML config file
-    - Advanced configuration in Lisp, including routes 
+    - Configuration in Lisp, including routes and middleware
     - Handle defined routes with custom Lisp functions
+    - Add middleware to add side-effects (like logging) to every request.
 
 
 *** Planned
-    - Keep up to date with protocol changes
-    - Logging (though not *too much* logging)
+    - More example handlers and middleware functions
+    - Keep up to date with any specification changes/clarifications.
+
     
 *** Maybe
     - authentication by client certificate
@@ -31,37 +32,32 @@ that Germinal shares some sounds with Gemini.
 
 ** Installation
 
-*** Binary
-    This is still a bit of a hack, and if you don't have a working Common Lisp
-    development environment, you will probably have trouble getting it running.
-    The included ~build.sh~ will build a single executable, but unfortunately it
-    depends on a shared library that will be somewhere in your ~/.cache folder...  
+*** With Roswell
 
-    Germinal has been tested on SBCL and ECL. It runs fine on both, but I haven't
-    been able to build a working binary distribution on ECL.
+    1. Install [[https://github.com/roswell/roswell/wiki/Installation][Roswell]].
+    2. Put the Germinal sources in a folder that Common Lisp knows about;
+       usually, either ~\~/common-lisp/~, or ~\~/.roswell/local-projects/~.
+       You can just put a symbolic link to the folder containing the sources
+       into either of those directories.
+    3. Edit ~germinal.ros~, setting the configuration variables to what's
+       appropriate for your server. In particular, you'll want to use
+       [[https://tildegit.org/solderpunk/gemcert][gemcert]] to generate keys for your domain, and set your domain name
+       and the path to the keys in ~germinal.ros~. If you don't want to run
+       a swank (debugging) server on localhost, you'll want to comment out
+       the lines that start it. 
+    4. Run ~germinal.ros~. For production deployment, you'll probably want
+       to create a user such as ~germinal~ for Germinal to run as. They'll
+       need to own their home directory, and to run ~ros setup~ before you
+       run ~germinal.ros~ as them. They'll also need the Germinal sources
+       symlinked into someplace Roswell can find it, as above.
 
-    You will need OpenSSL headers and libraries installed to build the cl+ssl
-    dependency. On Debian this is the libssl-dev package; on Fedora it is 
-    OpenSSL-devel. It may be something else on your platform. You'll also need gcc,
-    for the binary dependencies that quicklisp will build.
+    The ~germinal.service~ file is a pretty typical systemd configuration for
+    running Germinal from Roswell.
+    
+*** Manually
 
-    You also need to generate a self-signed cert and key. Currently these need to
-    be named cert.pem and key.pem and be stored in the working directory germinal
-    will be run from. This will improve in the future when I write the
-    configuration parts.  You can generate the cert like this:
-
-    ~openssl req -x509 -newkey rsa:4096 -keyout key.pem -out cert.pem -days 365 -nodes~
-
-*** From Lisp
-
-    Preferably, install [[https://www.cliki.net/CL-Launch][CL-Launch]].
-
-    Make a startup script based on sample-runner.lisp. (FIXME)
-
-** Usage
-
-*** Binary
-    Run ~germinal~. It will listen on port 1965 on all interfaces, and serve
-    content from ~/var/gemini/~. It will only serve world-readable files,
-    regardless of what user it is running as. Or ~germinal --help~ to get the
-    list of command-line arguments to change the interface, port, or root.
+    Germinal doesn't *depend* on Roswell; you can start it up any old way,
+    as long as you have all the dependencies installed (generally with
+    quicklisp). You can write a script to start it with ~sbcl -load~ or
+    whatever you like; it just has to set the configuration variables and
+    run ~germinal:start~.
