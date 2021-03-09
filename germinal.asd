@@ -19,9 +19,7 @@
                :ppath
                :osicat
                :cl-interpol
-               :unix-opts
                :quri
-               :cl-toml
                :cl-ppcre
                :cl-fad
                :local-time
@@ -33,7 +31,4 @@
                (:file "classes")
                )
   :description "A Gemini protocol server."
-  :build-operation "program-op"
-  :build-pathname "germinal"
-  :entry-point "germinal:start-cli"
   )

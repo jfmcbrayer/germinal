@@ -30,42 +30,6 @@
   sure you refer to the function in such a way that it can be found from the
   package you call `germinal-start' from.")
 
-(opts:define-opts
-  (:name :help
-   :description "Print this help text"
-   :short #\h
-   :long "help")
-  (:name :config
-   :description "Path to the configuration file to use. Default /etc/germinal/config.toml"
-   :short #\f
-   :long "config"
-   :arg-parser #'identity)
-  (:name :root
-   :description "Path to the root of the directory tree to serve. Default /var/gemini."
-   :short #\r
-   :long "root"
-   :arg-parser #'identity)
-  (:name :port
-   :description "Port number to listen on. Default 1965."
-   :short #\p
-   :long "port"
-   :arg-parser #'parse-integer) ;; <- takes an argument
-  (:name :host
-   :description "Hostname or IP address to bind to. Default 0.0.0.0"
-   :short #\i
-   :long "host"
-   :arg-parser #'identity)
-  (:name :cert
-   :description "Path to the TLS server certificate to use"
-   :short #\c
-   :long "cert"
-   :arg-parser #'identity)
-  (:name :key
-   :description "Path to the private key file for the TLS server certificate"
-   :short #\k
-   :long "key"
-   :arg-parser #'identity))
-
 (define-condition gemini-error (error)
   ((error-type :initarg :error-type
                :reader gemini-error-type)
@@ -92,84 +56,8 @@
                            :element-type '(unsigned-byte 8)
                            :in-new-thread background)))
 
-(defun start-cli ()
-  "Start the germinal server, taking config from the environment or command-line."
-  (if (getf (opts:get-opts) :help)
-      (progn
-        (opts:describe
-         :prefix "Germinal, a gemini server.  Usage:"
-         :args "[keywords]")
-        (opts:exit)))
-  (get-config-file)
-  (get-config-env)
-  (get-config-args)
-  (start))
 
 ;;; Internal functions
-(defun get-config-env ()
-  "Get the configuration from the environment"
-  (let ((germinal-root (osicat:environment-variable "GERMINAL_ROOT"))
-        (germinal-host (osicat:environment-variable "GERMINAL_HOST"))
-        (germinal-port (osicat:environment-variable "GERMINAL_PORT"))
-        (germinal-cert (osicat:environment-variable "GERMINAL_CERT"))
-        (germinal-cert-key (osicat:environment-variable "GERMINAL_CERT_KEY"))
-        (germinal-config-file (osicat:environment-variable "GERMINAL_CONFIG")))
-    (if germinal-root (setq *germinal-root* germinal-root))
-    (if germinal-host (setq *germinal-host* germinal-host))
-    (if germinal-port (setq *germinal-port* (parse-integer germinal-port)))
-    (if germinal-cert (setq *germinal-cert* germinal-cert))
-    (if germinal-cert-key (setq *germinal-cert-key* germinal-cert-key))
-    (if germinal-config-file (setq *germinal-config-file* germinal-config-file))))
-
-(defun get-config-args ()
-  "Get the configuration from the command-line"
-  (multiple-value-bind (options free-args)
-      (handler-case (opts:get-opts)
-        (error ()
-          (opts:describe)
-          (opts:exit)))
-    (if (getf options :root )
-        (setq *germinal-root* (getf options :root)))
-    (if (getf options :host)
-        (setq *germinal-host* (getf options :host)))
-    (if (getf options :port)
-        (setq *germinal-port* (getf options :port)))
-    (if (getf options :cert)
-        (setq *germinal-cert* (getf options :cert)))
-    (if (getf options :key)
-        (setq *germinal-cert-key* (getf options :key)))
-    (if (getf options :config)
-        (setq *germinal-config-file* (getf options :config)))))
-
-(defun get-config-file-path ()
-  "Use command-line, environment, or default to find config file"
-  (let ((env-config (osicat:environment-variable "GERMINAL_CONFIG"))
-        (opts-config (handler-case
-                         (getf (opts:get-opts) :config)
-                       (error () nil))))
-    (cond
-      (opts-config opts-config)
-      (env-config env-config)
-      (t *germinal-config-file*))))
-
-(defun get-config-file ()
-  "Set config vars based on contents of config file"
-  (when (probe-file (get-config-file-path))
-    (let* ((config (cl-toml:parse-file (get-config-file-path)))
-           (core (gethash "core" config)))
-      (when core
-        (when (gethash "server-name" core) (setq *germinal-server-name*
-                                                 (gethash "server-name" core)))
-        (when (gethash "root" core) (setq *germinal-root* (gethash "root" core)))
-        (when (gethash "host" core) (setq *germinal-host*
-                                          (gethash "host" core)))
-        (when (gethash "port" core) (setq *germinal-port* (gethash "port" core)))
-        (when (gethash "cert" core) (setq *germinal-cert*
-                                          (gethash "cert" core)))
-        (when (gethash "key" core) (setq *germinal-cert-key*
-                                         (gethash "key" core))))
-      config)))
-
 (defun read-line-crlf (stream &optional eof-error-p)
   "Read a CRLF-terminated line from a binary stream and return a string"
   (let ((s (make-string-output-stream)))
