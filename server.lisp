@@ -224,9 +224,16 @@ route to the request and any positional args from the route."
 (defun path-blacklisted-p (path &optional (blacklist *germinal-pathname-blacklist*))
   "Return t if the path matches something in the pathname blacklist."
    (loop for pattern in blacklist
-         when (pathname-match-p (cl-fad:merge-pathnames-as-file path)
-                                pattern)
+         when (path-components-contain-p path pattern)
            return t))
+
+(defun path-components-contain-p (path pattern)
+  (cond
+    ((cl-fad:pathname-root-p path) nil)
+    ((pathname-match-p (cl-fad:pathname-as-file path) pattern) t)
+    (t (path-components-contain-p (cl-fad:pathname-parent-directory
+                           (cl-fad:pathname-as-directory path)) pattern))
+  ))
 
 (defun gemini-serve-file-or-directory (request &rest junk)
   "Given a gemini request (string), try to respond by serving a file or directory listing."
