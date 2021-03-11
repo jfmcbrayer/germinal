@@ -10,8 +10,6 @@
                 #:uri-userinfo
                 #:url-encode
                 #:url-decode)
-  (:import-from :cl-toml
-                #:parse-file)
   (:import-from :ppath
                 #:normpath
                 #:join)
@@ -22,6 +20,7 @@
            #:start-cli
            #:make-request
            #:make-response
+           #:path-blacklisted-p
            #:gemini-serve-file-or-directory
            #:*germinal-server-name*
            #:*germinal-root*

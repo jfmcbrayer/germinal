@@ -10,7 +10,6 @@
 (defvar *germinal-port* 1965)
 (defvar *germinal-cert* "/etc/germinal/cert.pem")
 (defvar *germinal-cert-key* "/etc/germinal/key.pem")
-(defvar *germinal-config-file* "/etc/germinal/config.toml")
 (defvar *germinal-pathname-blacklist* '(".git")
   "List of files and directories to exclude. 
    Relative files/directories are excluded in all subdirectories of *germinal-root*.
