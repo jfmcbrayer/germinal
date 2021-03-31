@@ -23,6 +23,7 @@
                :cl-ppcre
                :cl-fad
                :local-time
+               :uax-15
                )
   :components ((:file "package")
                (:file "server")

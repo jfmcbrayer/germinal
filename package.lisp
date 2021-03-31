@@ -16,6 +16,8 @@
   (:import-from :cl-ppcre
                 #:scan
                 #:scan-to-strings)
+  (:import-from :uax-15
+                #:normalize)
   (:export #:start
            #:start-cli
            #:make-request
