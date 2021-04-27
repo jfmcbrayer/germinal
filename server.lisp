@@ -83,7 +83,7 @@ route."
 route to the request and any positional args from the route."
   (loop for route in *germinal-routes*
         when (scan (car route) (uri-path (request-url request)))
-          return (apply (symbol-function (car (cdr route)))
+          return (apply (symbol-function (cdr route))
                         request
                         (route-args route request))))
 
