@@ -8,16 +8,16 @@
        *standard-output*
        "[~A] ~A \"~A\" ~A ~A ~%"
        (local-time:now)
-       (usocket:host-to-hostname (client-address request))
-       (path-info request)
-       (status response)
-       (meta response))
+       (usocket:host-to-hostname (request-client-address request))
+       (request-pathinfo request)
+       (response-status response)
+       (response-meta response))
       response)))
 
 (defun validate-server-name (handler)
   "Middleware that ensures the requested host matches *germinal-server-name*."
   (lambda (request)
-    (let* ((url (url request))
+    (let* ((url (request-url request))
            (host (uri-host url)))
       (if (not (scan *germinal-server-name* host))
           (make-response 51 "Not Found")

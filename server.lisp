@@ -75,22 +75,22 @@
   "Take a request object as argument, and return the function for handling the
 route."
   (loop for route in *germinal-routes*
-        when (scan (car route) (uri-path (url request)))
+        when (scan (car route) (uri-path (request-url request)))
           return (symbol-function(cdr route))))
 
 (defun serve-route (request)
   "Take a request object as argument, and apply the function for handling the
 route to the request and any positional args from the route."
   (loop for route in *germinal-routes*
-        when (scan (car route) (uri-path (url request)))
-          return (apply (symbol-function(cdr route))
+        when (scan (car route) (uri-path (request-url request)))
+          return (apply (symbol-function (car (cdr route)))
                         request
                         (route-args route request))))
 
 (defun route-args (route request)
   (vector-to-list (nth 1 (multiple-value-list
                           (scan-to-strings (car route)
-                                           (uri-path (url request)))))))
+                                           (uri-path (request-url request)))))))
 
 (defun serve-route-with-middleware (request)
   "Take a request object as argument, and apply the chain of handlers in
@@ -134,7 +134,7 @@ route to the request and any positional args from the route."
   "Given a gemini request (string), try to respond by serving a file or directory listing."
   (declare (ignore junk))
   (handler-case 
-      (let* ((path (get-path-for-url (url request)))
+      (let* ((path (get-path-for-url (request-url request)))
              (path-kind (osicat:file-kind path :follow-symlinks t)))
         (if (or (not (member :other-read (osicat:file-permissions path)))
                 (path-blacklisted-p path)

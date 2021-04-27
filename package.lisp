@@ -32,4 +32,12 @@
            #:*germinal-cert-key*
            #:*germinal-pathname-blacklist*
            #:*germinal-routes*
-           #:*germinal-middleware*))
+           #:*germinal-middleware*
+           #:request-url
+           #:request-pathinfo
+           #:request-params
+           #:request-client-key
+           #:request-client-addres
+           #:response-status
+           #:response-meta
+           #:response-body))
